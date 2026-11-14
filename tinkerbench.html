@@ -66,9 +66,13 @@ button{touch-action:manipulation}
   background:var(--panel); border:1px solid var(--line); border-radius:10px;
 }
 .dock .btn{height:40px; min-width:40px; padding:0}
-.tool{position:absolute; left:8px; top:40px; z-index:15; display:grid; grid-template-columns:1fr 1fr; gap:6px 8px; width:min(300px,calc(100% - 80px));
+.tool{position:absolute; left:8px; top:40px; z-index:18; display:grid; grid-template-columns:1fr 1fr; gap:6px 8px; width:min(300px,calc(100% - 80px));
   padding:10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; font-size:12px}
 .tool[hidden]{display:none}
+.tool{max-height:calc(100% - 48px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch}
+.rev-tools{flex-wrap:wrap}
+.tool>.row:last-child{position:sticky; bottom:-10px; margin:0 -10px -10px; padding:8px 10px; background:var(--panel); border-top:1px solid var(--line)}
+@media (max-height:520px){ #rev-cv{width:min(100%,36vh)!important; justify-self:center; max-height:none!important} }
 .plates{position:absolute; right:8px; bottom:8px; z-index:17; display:flex; gap:4px; align-items:center; max-width:calc(100% - 16px); padding:4px; background:var(--panel); border:1px solid var(--line); border-radius:10px}
 #pl-tabs{display:flex; gap:4px; overflow-x:auto; min-width:0; scrollbar-width:none}
 #pl-tabs .btn{white-space:nowrap; flex:none}
@@ -85,7 +89,11 @@ button{touch-action:manipulation}
 #sl-panel input[type=checkbox],#arr-panel input[type=checkbox]{width:18px; height:18px; padding:0; vertical-align:middle}
 #sl-panel{max-height:calc(100% - 52px); overflow-y:auto; width:min(340px,calc(100% - 80px))}
 #sl-panel textarea{width:100%; font:11px/1.35 ui-monospace,monospace; background:var(--panel-2); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px; resize:vertical}
-#sl-panel details{grid-column:1/-1} #sl-panel summary{cursor:pointer; padding:6px 0; color:var(--fg)} #sl-panel #sl-sum{line-height:1.5; color:var(--fg)}
+#sl-panel details{grid-column:1/-1} #sl-panel summary{cursor:pointer; padding:6px 0; color:var(--fg)} #sl-panel #sl-sum,#sl-sum2{line-height:1.5; color:var(--fg)}
+.ck{display:flex; gap:6px; margin-top:4px; font-size:12px; line-height:1.4}
+.ck>span:first-child{flex:none; width:1.2em; text-align:center}
+.ck-bad{color:#ff7b7b} .ck-warn{color:var(--warn)} .ck-info{color:var(--fg-2)} .ck-ok{color:#5ccf8f}
+.slbar #sl-sum2{max-height:112px; overflow-y:auto}
 .slbar{position:absolute; left:50%; bottom:46px; transform:translateX(-50%); z-index:16; display:flex; flex-direction:column; gap:6px; align-items:stretch; width:min(420px,calc(100% - 24px)); padding:8px 10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; font-size:12px}
 .slbar[hidden]{display:none}
 .slbar input[type=range]{width:100%; height:32px}
@@ -123,7 +131,7 @@ button{touch-action:manipulation}
 .brand{font:600 13px var(--mono); letter-spacing:.14em; text-transform:uppercase; display:flex; align-items:center; gap:8px; padding-right:4px}
 .brand i{width:14px;height:14px;border:2px solid var(--accent);display:inline-block;transform:rotate(45deg);border-radius:2px}
 .brand small{font:400 10px var(--mono); color:var(--fg-2); letter-spacing:.08em}
-.grp-bar{display:flex; gap:4px; align-items:center}
+.grp-bar{display:flex; flex-wrap:wrap; gap:4px; align-items:center; max-width:100%}
 
 .btn{
   min-width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
@@ -354,6 +362,32 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
       <label>Size (mm) <input type="number" id="ed-r" value="1.5" min="0.2" max="100" step="0.2" inputmode="decimal"></label>
       <span class="row"><button type="button" class="btn sm primary" id="ed-go">Apply</button><button type="button" class="btn sm" id="ed-close">Done</button></span>
     </div>
+    <div class="tool" id="ms-panel" hidden>
+      <b>Measure</b>
+      <small id="ms-st">Tap a corner, edge or face. It snaps to corners first.</small>
+      <div class="wide" id="ms-out" style="grid-column:1/-1;font-variant-numeric:tabular-nums;line-height:1.5"></div>
+      <span class="row"><button type="button" class="btn sm" id="ms-clear">Clear</button><button type="button" class="btn sm" id="ms-close">Done</button></span>
+    </div>
+    <div class="tool" id="shl-panel" hidden>
+      <b>Shell (hollow out)</b>
+      <small>Works on any closed solid. Open top or bottom needs a flat face there.</small>
+      <label>Wall thickness (mm) <input type="number" id="shl-t" value="2" min="0.2" max="50" step="0.2" inputmode="decimal"></label>
+      <label>Open face <select id="shl-o"><option value="none">None (sealed)</option><option value="top">Top</option><option value="bottom">Bottom</option></select></label>
+      <span class="row"><button type="button" class="btn sm primary" id="shl-go">Hollow out</button><button type="button" class="btn sm" id="shl-close">Done</button></span>
+    </div>
+    <div class="tool" id="sec-panel" hidden style="left:auto;right:8px;top:52px;width:min(230px,calc(100% - 16px))">
+      <b>Section view</b>
+      <label>Cut across <select id="sec-a"><option value="x">X (left/right)</option><option value="y">Y (front/back)</option><option value="z">Z (height)</option></select></label>
+      <label>Position (mm) <input type="number" id="sec-n" value="0" step="0.5" inputmode="decimal"></label>
+      <input class="wide" type="range" id="sec-p" min="-110" max="110" step="0.5" value="0" aria-label="Cut position" style="grid-column:1/-1">
+      <label class="wide row-check"><span><input type="checkbox" id="sec-f"> Flip side</span></label>
+      <span class="row"><button type="button" class="btn sm" id="sec-x">Close</button></span>
+    </div>
+    <div class="tool" id="cmp-panel" hidden style="left:50%;transform:translateX(-50%);top:8px;width:min(300px,calc(100% - 16px))">
+      <b id="cmp-t">Editing component</b>
+      <small id="cmp-s"></small>
+      <span class="row"><button type="button" class="btn sm primary" id="cmp-done">Done</button><button type="button" class="btn sm" id="cmp-cancel">Cancel</button></span>
+    </div>
     <div class="tool" id="sl-panel" hidden>
       <b>Slice for print (Sovol SV06, Klipper)</b>
       <small class="wide" id="sl-plate"></small>
@@ -374,6 +408,12 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
       <label>Fan % <input type="number" id="sl-fn" value="100" min="0" max="100" step="5" inputmode="numeric"></label>
       <label>Retraction mm <input type="number" id="sl-rt" value="0.8" min="0" max="6" step="0.1" inputmode="decimal"></label>
       <label class="wide">Brim width mm (0 = skirt only) <input type="number" id="sl-br" value="0" min="0" max="20" step="1" inputmode="numeric"></label>
+      <label class="wide">Supports <select id="sl-su"><option value="off">Off</option><option value="plate">Touching bed only</option><option value="all">Everywhere</option></select></label>
+      <label>Support density % <input type="number" id="sl-sd" value="15" min="5" max="50" step="5" inputmode="numeric"></label>
+      <label>Overhang angle ° <input type="number" id="sl-sa" value="45" min="20" max="80" step="5" inputmode="numeric"></label>
+      <small class="wide">Supports are generated for overhangs steeper than the angle. A gap is left above and below the model so they snap off. Touching bed only skips anything that would rest on the model itself.</small>
+      <label class="wide row-check"><span><input type="checkbox" id="sl-vs"> Spiral vase mode</span></label>
+      <small class="wide" id="sl-vs-h" hidden>One continuous wall that spirals up, with a solid base (the Bottom layers setting) and an open top. Walls, infill and top layers are ignored, and only the largest outline is printed. A wider line width (0.6 to 0.8) makes a sturdier wall.</small>
       <label class="wide row-check"><span><input type="checkbox" id="sl-kl" checked> Report layers to Klipper (SET_PRINT_STATS_INFO)</span></label>
       <details class="wide"><summary>Start and end G-code</summary>
         <label>Start<textarea id="sl-st-g" rows="8" spellcheck="false"></textarea></label>
@@ -408,12 +448,26 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
       <span class="row"><button type="button" class="btn sm" id="exp-close">Close</button></span>
     </div>
     <div class="tool" id="rev-panel" hidden>
-      <b>Draw and revolve</b>
+      <b id="rev-ttl">Sketch and revolve</b>
+      <span class="row" id="rev-modes" role="group" aria-label="Sketch mode"><button type="button" class="btn sm" data-m="revolve" aria-pressed="true">Revolve</button><button type="button" class="btn sm" data-m="extrude" aria-pressed="false">Extrude</button></span>
+      <span class="row rev-tools" id="rev-tools" role="group" aria-label="Sketch tool"><button type="button" class="btn sm" data-t="select" aria-pressed="false">Select</button><button type="button" class="btn sm" data-t="pen" aria-pressed="true">Pen</button><button type="button" class="btn sm" data-t="line" aria-pressed="false">Line</button><button type="button" class="btn sm" data-t="rect" aria-pressed="false">Rectangle</button><button type="button" class="btn sm" data-t="circle" aria-pressed="false">Circle</button><button type="button" class="btn sm" data-t="erase" aria-pressed="false">Eraser</button></span>
       <canvas id="rev-cv" width="440" height="440"></canvas>
-      <label>Height <input type="number" id="rev-h" value="30" min="3" max="200" step="1" inputmode="decimal"></label>
-      <label>Smoothness <select id="rev-seg"><option value="64">Smooth</option><option value="32">Medium</option><option value="12">Faceted</option></select></label>
-      <small>Draw one side of the shape's outline, from bottom to top. The left edge is the middle of the shape.</small>
-      <span class="row"><button type="button" class="btn sm primary" id="rev-go">Revolve</button><button type="button" class="btn sm" id="rev-clear">Clear</button><button type="button" class="btn sm" id="rev-close">Close</button></span>
+      <div id="rev-dim" hidden style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px 8px"></div>
+      <label class="rm-r">Height (mm) <input type="number" id="rev-h" value="30" min="3" max="200" step="1" inputmode="decimal"></label>
+      <label class="rm-r">Detail <select id="rev-seg"><option value="160" data-t="0.0005">Ultra (heavy)</option><option value="96" data-t="0.0015" selected>Fine</option><option value="64" data-t="0.004">Normal</option><option value="32" data-t="0.006">Low</option><option value="12" data-t="0.006">Faceted</option></select></label>
+      <label class="rm-e" hidden>Sketch on <select id="rev-pl"><option value="xy">Floor (XY)</option><option value="xz">Front wall (XZ)</option><option value="yz">Side wall (YZ)</option></select></label>
+      <label class="rm-e" hidden>Plane offset (mm) <input type="number" id="rev-po" value="0" step="0.5" inputmode="decimal"></label>
+      <span class="row rm-e" hidden><button type="button" class="btn sm" id="rev-pk" aria-pressed="false">Pick a face on a shape</button></span>
+      <small class="rm-e" id="rev-pls" hidden style="grid-column:1/-1"></small>
+      <label class="rm-e" hidden>Sketch area <select id="rev-z"><option value="16">16 mm across</option><option value="32">32 mm across</option><option value="64" selected>64 mm across</option><option value="128">128 mm across</option><option value="256">256 mm across</option></select></label>
+      <label class="rm-e" hidden>Depth (mm) <input type="number" id="rev-d" value="5" min="0.1" max="200" step="0.5" inputmode="decimal"></label>
+      <label class="rm-e" hidden>Result <select id="rev-cm"><option value="add">Add material</option><option value="cut">Cut away</option></select></label>
+      <label class="rm-e row-check" hidden><span><input type="checkbox" id="rev-mg" checked> Merge into the part</span></label>
+      <label class="row-check" id="rev-ps-l" hidden><span><input type="checkbox" id="rev-ps" checked> Smooth pen strokes</span></label>
+      <label id="rev-es-l" hidden>Eraser size <select id="rev-es"><option value="s">Small</option><option value="m" selected>Medium</option><option value="l">Large</option></select></label>
+      <label id="rev-sn-l" hidden>Snap to grid <select id="rev-sn"><option value="off">Off</option><option value="cell">Whole cells</option><option value="half" selected>Half cells</option><option value="quarter">Quarter cells</option></select></label>
+      <small id="rev-help"></small>
+      <span class="row"><button type="button" class="btn sm primary" id="rev-go">Revolve</button><button type="button" class="btn sm" id="rev-undo">Undo</button><button type="button" class="btn sm" id="rev-clear">Clear</button><button type="button" class="btn sm" id="rev-close">Close</button></span>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
@@ -538,6 +592,12 @@ const ICON = {
   array:'<rect x="2" y="9" width="5" height="6" rx="1"/><rect x="9.5" y="9" width="5" height="6" rx="1"/><rect x="17" y="9" width="5" height="6" rx="1"/>',
   split:'<path d="M5 4h14v7H5zM5 13h14v7H5z"/><path d="M2 12h20" stroke-dasharray="2.5 2"/>',
   pushpull:'<rect x="4" y="12" width="12" height="8" rx="1"/><path d="M10 9V3M7 6l3-3 3 3"/>',
+  sketch:'<path d="M4 20h10V10H4z"/><path d="M14 10l6-4v10l-6 4"/><path d="M4 10l6-4h10"/>',
+  comp:'<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M11 7h3a3 3 0 0 1 3 3v3"/>',
+  compedit:'<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M14 4l4 4-6 6h-4v-4z"/>',
+  section:'<path d="M4 6h16v12H4z" stroke-dasharray="2 2"/><path d="M12 3v18"/><path d="M12 6h8v12h-8z" fill="currentColor" fill-opacity=".25"/>',
+  shell:'<rect x="4" y="6" width="16" height="14" rx="2"/><rect x="8" y="10" width="8" height="7" rx="1"/>',
+  measure:'<path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/>',
   edgefil:'<path d="M4 20V8l4-4h12"/><path d="M4 20h16V4" stroke-dasharray="2 2.5"/>',
   sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   hole:'<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="2.5 2.5"/><circle cx="12" cy="12" r="4"/>',
@@ -548,8 +608,8 @@ const ICON = {
 };
 
 /* ---------- state ---------- */
-const st = {objs:[], sel:[], mode:'translate', snap:1, rotSnap:15, bed:220, lock:true, multi:false, objSnap:true, nextId:1, counts:{}};
-const BEDS=[180,200,220,250,300,350], SNAPS=[0,0.5,1,2,5,10], ROTS=[0,5,15,45,90];
+const st = {objs:[], sel:[], mode:'translate', snap:1, rotSnap:15, bed:220, lock:true, multi:false, objSnap:true, objPx:8, nextId:1, counts:{}};
+const BEDS=[180,200,220,250,300,350], SNAPS=[0,-1,0.05,0.1,0.25,0.5,1,2,5,10], PULLS=[0,4,8,14], ROTS=[0,5,15,45,90];
 const COLORS=['#ef8a3d','#d64545','#e8c547','#4fa36a','#2f9aa8','#3d6fd6','#8a63c9','#e9e9e4','#8b9199','#2a2d31'];
 const DEFAULT_COLOR='#ef8a3d', HOLE_COLOR='#8e9ba7';
 
@@ -605,10 +665,18 @@ const proxy=new THREE.Object3D(); scene.add(proxy);   // stands in for a multi-s
 const guide=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x46c1d6,depthTest:false,transparent:true}));
 guide.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(12),3));
 guide.frustumCulled=false; guide.visible=false; guide.renderOrder=5; scene.add(guide);
+const fineGrid=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x46c1d6,transparent:true,opacity:0.22,depthTest:false}));
+fineGrid.frustumCulled=false; fineGrid.visible=false; fineGrid.renderOrder=4; scene.add(fineGrid);
+function showFineGrid(cx,cy){                              // the active snap grid, drawn around the thing being dragged
+  const g=effSnap(); if(!(g>0)&&true){ fineGrid.visible=false; return; }
+  const ext=clamp(g*30,6,40), n=Math.min(300,Math.round(ext/g)), a=[], x0=Math.round(cx/g)*g, y0=Math.round(cy/g)*g;
+  for(let i=-n;i<=n;i++){ a.push(x0+i*g,y0-n*g,0.07,x0+i*g,y0+n*g,0.07,x0-n*g,y0+i*g,0.07,x0+n*g,y0+i*g,0.07); }
+  fineGrid.userData={x0,y0,r:n*g}; fineGrid.geometry.setAttribute('position',new THREE.Float32BufferAttribute(a,3)); fineGrid.geometry.computeBoundingSphere(); fineGrid.visible=true; requestRender();
+}
 
 let dirty=true, dragging=false;
 const requestRender=()=>{dirty=true;};
-controls.addEventListener('change',requestRender);
+controls.addEventListener('change',()=>{ if(st.snap<0&&typeof applySnap==='function') applySnap(); requestRender(); });
 tc.addEventListener('change',requestRender);
 tc.addEventListener('dragging-changed',e=>{controls.enabled=!e.value; dragging=!!e.value;});
 
@@ -674,12 +742,34 @@ function fixWinding(g){
   }
 }
 /* centre a geometry on its bounding box; return it with its native size (mm) and the offset removed */
+/* Shading only: vertex normals averaged across neighbouring faces that bend less than `deg`, so curved
+   surfaces look smooth while real edges stay sharp. The printed geometry is untouched. */
+function smoothNormals(g,deg){
+  const pos=g.attributes.position.array, nt=pos.length/9;
+  if(nt>250000){ g.computeVertexNormals(); return; }
+  const fn=new Float32Array(nt*3), key=new Array(nt*3), map=new Map(), q=1e4;
+  for(let t=0;t<nt;t++){
+    const o=t*9, ux=pos[o+3]-pos[o],uy=pos[o+4]-pos[o+1],uz=pos[o+5]-pos[o+2],vx=pos[o+6]-pos[o],vy=pos[o+7]-pos[o+1],vz=pos[o+8]-pos[o+2];
+    fn[t*3]=uy*vz-uz*vy; fn[t*3+1]=uz*vx-ux*vz; fn[t*3+2]=ux*vy-uy*vx;           // area weighted
+    for(let k=0;k<3;k++){ const kk=Math.round(pos[o+k*3]*q)+','+Math.round(pos[o+k*3+1]*q)+','+Math.round(pos[o+k*3+2]*q); key[t*3+k]=kk; let a=map.get(kk); if(!a){ a=[]; map.set(kk,a); } a.push(t); }
+  }
+  const cs=Math.cos(deg*Math.PI/180), out=new Float32Array(nt*9);
+  for(let t=0;t<nt;t++){
+    const ax=fn[t*3],ay=fn[t*3+1],az=fn[t*3+2], al=Math.hypot(ax,ay,az)||1;
+    for(let k=0;k<3;k++){
+      let sx=0,sy=0,sz=0; const list=map.get(key[t*3+k]);
+      for(const u of list){ const bx=fn[u*3],by=fn[u*3+1],bz=fn[u*3+2], bl=Math.hypot(bx,by,bz)||1; if((ax*bx+ay*by+az*bz)/(al*bl)>=cs){ sx+=bx; sy+=by; sz+=bz; } }
+      const l=Math.hypot(sx,sy,sz)||1; out[t*9+k*3]=sx/l; out[t*9+k*3+1]=sy/l; out[t*9+k*3+2]=sz/l;
+    }
+  }
+  g.setAttribute('normal',new THREE.BufferAttribute(out,3));
+}
 function prep(g,opt){
   const gen=opt&&opt.gen, flat=!!g.userData.flat;
   if(g.index) g=g.toNonIndexed();
   if(g.attributes.uv) g.deleteAttribute('uv');
   if(gen){ g=dropDegenerate(g); fixWinding(g); }
-  if(flat||!g.attributes.normal) g.computeVertexNormals();
+  if(flat||!g.attributes.normal) smoothNormals(g,30);
   g.computeBoundingBox();
   const c=new THREE.Vector3(); g.boundingBox.getCenter(c); g.translate(-c.x,-c.y,-c.z);
   g.computeBoundingBox(); g.computeBoundingSphere();
@@ -806,7 +896,7 @@ function addMesh(o){
   st.nextId=Math.max(st.nextId,id+1);
   m.userData={id,name:o.name,shape:o.shape||null,params:o.params?Object.assign({},o.params):null,
     base:o.base.clone(),solid:'#'+new THREE.Color(o.color||DEFAULT_COLOR).getHexString(),hole:false,outline:null,edgeGeo:null,
-    hidden:!!o.hidden,locked:!!o.locked,group:o.group||null,gmat:o.gmat||null};
+    hidden:!!o.hidden,locked:!!o.locked,group:o.group||null,gmat:o.gmat||null,comp:o.comp||null};
   m.visible=!o.hidden;
   if(o.matrix){ m.matrix.fromArray(o.matrix); m.matrix.decompose(m.position,m.quaternion,m.scale); }
   if(o.hole) setHole(m,true);
@@ -818,7 +908,13 @@ function removeMesh(m){
   world.remove(m); m.material.dispose();
   const i=st.objs.indexOf(m); if(i>=0) st.objs.splice(i,1);
 }
-const snapTo = v => st.snap>0 ? Math.round(v/st.snap)*st.snap : v;
+const SNAP_AUTO=[0.1,0.25,0.5,1,2,5,10];
+function effSnap(){                                        // grid step in mm; Auto picks one that is about 3 px on screen
+  if(st.snap>=0) return st.snap;
+  const want=wpp()*3; return SNAP_AUTO.find(v=>v>=want)||10;
+}
+function wpp(){ const H=Math.max(200,renderer.domElement.clientHeight||600); return 2*camera.position.distanceTo(controls.target)*Math.tan(rad(camera.fov/2))/H; }
+const snapTo = v => { const g=effSnap(); return g>0 ? Math.round(v/g)*g : v; };
 function addShape(keyName,at){
   const def=shapeDef(keyName); if(!def) return null;
   const params=defaultsOf(def);
@@ -897,18 +993,19 @@ function placeProxy(ms){
   proxy.updateMatrix(); proxy.updateMatrixWorld(true);
 }
 function applySnap(){
-  tc.setTranslationSnap(st.snap>0?st.snap:null);
+  tc.setTranslationSnap(effSnap()>0?effSnap():null);
   tc.setRotationSnap(st.rotSnap>0?rad(st.rotSnap):null);
 }
 
 /* ---------- snapping to other shapes ---------- */
-function computeSnap(box,axes,others){
-  const thr=clamp(camera.position.distanceTo(controls.target)*0.01,0.6,5);
+function computeSnap(box,axes,others,corners){
+  const thr=clamp(st.objPx*wpp(),0.03,5);
   const h=st.bed/2, d={}, guides=[];
   axes.forEach((ax,ai)=>{
     const mine=[box.min[ax],(box.min[ax]+box.max[ax])/2,box.max[ax]];
     const cands=[];
     others.forEach(b=>{ cands.push({c:b.min[ax],m:-1},{c:(b.min[ax]+b.max[ax])/2,m:-1},{c:b.max[ax],m:-1}); });
+    if(corners) corners[ax].forEach(c=>cands.push({c,m:-1}));
     if(ax==='z') cands.push({c:0,m:0});
     else cands.push({c:-h,m:0},{c:0,m:1},{c:h,m:2});
     let best=null, at=0;
@@ -943,8 +1040,12 @@ tc.addEventListener('mouseDown',()=>{
     proxy.updateMatrix();
     multiStart={pm:proxy.matrix.clone(),items:ms.map(m=>{m.updateMatrix();return m.matrix.clone();})};
   }else multiStart=null;
+  if(tc.mode==='translate'&&effSnap()>0&&effSnap()<10&&/x|y/i.test(tc.axis||'')&&ms.length){ const c=boundsOf(ms).getCenter(new THREE.Vector3()); showFineGrid(c.x,c.y); }
   snapCtx=(tc.mode==='translate'&&st.objSnap)?{
     others:st.objs.filter(o=>!st.sel.includes(o.userData.id)).map(o=>worldBox(o)),
+    corners:(()=>{ const out={x:[],y:[],z:[]}, seen={x:new Set(),y:new Set(),z:new Set()};      // coordinates of other shapes' sharp corners
+      st.objs.filter(o=>o.visible&&!st.sel.includes(o.userData.id)&&!o.userData.hole).slice(0,40).forEach(o=>{ try{ cornersOf(topoOf(o)).slice(0,400).forEach(v=>['x','y','z'].forEach((a,i)=>{ const k=Math.round(v[i]*100); if(!seen[a].has(k)&&out[a].length<600){ seen[a].add(k); out[a].push(v[i]); } })); }catch(e){} });
+      return out; })(),
     start:ms.length>1?boundsOf(ms):null, p0:proxy.position.clone()
   }:null;
 });
@@ -955,7 +1056,7 @@ tc.addEventListener('objectChange',()=>{
   if(snapCtx && ms.length){
     const axes=['x','y','z'].filter(a=>(tc.axis||'').toLowerCase().indexOf(a)>=0);
     const box=multi?snapCtx.start.clone().translate(proxy.position.clone().sub(snapCtx.p0)):worldBox(ms[0]);
-    const r=computeSnap(box,axes,snapCtx.others);
+    const r=computeSnap(box,axes,snapCtx.others,snapCtx.corners);
     Object.keys(r.d).forEach(a=>{ (multi?proxy:ms[0]).position[a]+=r.d[a]; });
     guides=r.guides;
   }
@@ -966,11 +1067,15 @@ tc.addEventListener('objectChange',()=>{
   }else if(ms.length===1 && st.mode==='scale'){
     const s=ms[0].scale; s.set(Math.max(0.01,Math.abs(s.x)),Math.max(0.01,Math.abs(s.y)),Math.max(0.01,Math.abs(s.z)));
   }
+  if(fineGrid.visible&&ms.length){                          // same size grid, re-centred only once the object has left it
+    const c=boundsOf(ms).getCenter(new THREE.Vector3()), f=fineGrid.userData;
+    if(Math.abs(c.x-f.x0)>f.r||Math.abs(c.y-f.y0)>f.r) showFineGrid(c.x,c.y);
+  }
   showGuides(guides);
   scheduleRefresh();
 });
 tc.addEventListener('mouseUp',()=>{
-  showGuides(null); snapCtx=null;
+  showGuides(null); snapCtx=null; if(fineGrid.visible){ fineGrid.visible=false; requestRender(); }
   commit();
   const ms=selMeshes(); if(ms.length>1) placeProxy(ms);
   requestRender();
@@ -1039,7 +1144,7 @@ function snapshot(){
     m.updateMatrix();
     return {id:m.userData.id,name:m.userData.name,shape:m.userData.shape,params:m.userData.params?Object.assign({},m.userData.params):null,
       hole:m.userData.hole,geo:m.geometry,base:m.userData.base.clone(),mat:m.matrix.toArray(),color:m.userData.solid,
-      hidden:m.userData.hidden,locked:m.userData.locked,group:m.userData.group,gmat:m.userData.gmat};
+      hidden:m.userData.hidden,locked:m.userData.locked,group:m.userData.group,gmat:m.userData.gmat,comp:m.userData.comp};
   })};
 }
 function sceneIsSane(){
@@ -1061,7 +1166,7 @@ function commit(){
 function restore(s){
   tc.detach();
   st.objs.slice().forEach(removeMesh);
-  s.items.forEach(it=>addMesh({id:it.id,name:it.name,shape:it.shape,params:it.params,hole:it.hole,geo:it.geo,base:it.base,color:it.color,matrix:it.mat,hidden:it.hidden,locked:it.locked,group:it.group,gmat:it.gmat}));
+  s.items.forEach(it=>addMesh({id:it.id,name:it.name,shape:it.shape,params:it.params,hole:it.hole,geo:it.geo,base:it.base,color:it.color,matrix:it.mat,hidden:it.hidden,locked:it.locked,group:it.group,gmat:it.gmat,comp:it.comp}));
   st.nextId=s.nextId; setDirty(true);
   setSelection(s.sel); persist(); updateStatus();
 }
@@ -1085,13 +1190,14 @@ function recordOf(m){
   if(m.userData.hidden) it.hidden=true;
   if(m.userData.locked) it.locked=true;
   if(m.userData.group){ it.group=m.userData.group; it.gmat=m.userData.gmat; }
+  if(m.userData.comp) it.comp=m.userData.comp;
   if(m.userData.shape){ it.shape=m.userData.shape; it.params=m.userData.params; }
   else it.pos=f32ToB64(m.geometry.attributes.position.array);
   return it;
 }
 function serialize(){
   syncPlate();
-  return {v:4,bed:st.bed,snap:st.snap,rotSnap:st.rotSnap,objSnap:st.objSnap,items:plates[curPlate].items,cur:curPlate,plates:plates.map(p=>({name:p.name,items:p.items}))};
+  return {v:4,bed:st.bed,snap:st.snap,rotSnap:st.rotSnap,objSnap:st.objSnap,objPx:st.objPx,items:plates[curPlate].items,cur:curPlate,plates:plates.map(p=>({name:p.name,items:p.items}))};
 }
 /* rebuild a mesh from a saved record (used by open, undo-free paths and ungroup) */
 function meshFromRecord(it,matrix){
@@ -1101,9 +1207,9 @@ function meshFromRecord(it,matrix){
     params=Object.assign(defaultsOf(def),it.params||{});
     pr=prep(def.make(params),{gen:true});
   }else if(it.pos){
-    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(b64ToF32(it.pos),3)); g.computeVertexNormals(); pr=prep(g);
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(b64ToF32(it.pos),3)); pr=prep(g);
   }else return null;
-  return addMesh({name:it.name,shape:it.shape||null,params,hole:it.hole,geo:pr.geo,base:pr.base,color:it.color,matrix:matrix||it.mat,hidden:it.hidden,locked:it.locked,group:it.group,gmat:it.gmat});
+  return addMesh({name:it.name,shape:it.shape||null,params,hole:it.hole,geo:pr.geo,base:pr.base,color:it.color,matrix:matrix||it.mat,hidden:it.hidden,locked:it.locked,group:it.group,gmat:it.gmat,comp:it.comp});
 }
 function loadData(d){
   tc.detach();
@@ -1111,7 +1217,7 @@ function loadData(d){
   if(d.bed) st.bed=d.bed;
   if(d.snap!=null) st.snap=d.snap;
   if(d.rotSnap!=null) st.rotSnap=d.rotSnap;
-  if(d.objSnap!=null) st.objSnap=!!d.objSnap;
+  if(d.objSnap!=null) st.objSnap=!!d.objSnap; st.objPx=d.objPx!=null?+d.objPx:(st.objSnap?8:0); if(!st.objSnap) st.objPx=0;
   if(d.plates&&d.plates.length){ plates=d.plates.map(p=>({name:p.name||'Plate',items:p.items||[]})); curPlate=Math.max(0,Math.min(d.cur|0,plates.length-1)); }
   else{ plates=[{name:'Plate 1',items:d.items||[]}]; curPlate=0; }
   plates[curPlate].items.forEach(it=>{ meshFromRecord(it); });
@@ -1141,7 +1247,7 @@ function parseExpr(s){
   const expr=()=>{ let v=term(); while(s[i]==='+'||s[i]==='-'){const o=s[i++],r=term(); v=o==='+'?v+r:v-r;} return v; };
   try{ const v=expr(); return (i===s.length&&isFinite(v))?v:null; }catch(e){ return null; }
 }
-const f1 = v => { const r=Math.round(v*10)/10; return (Object.is(r,-0)?0:r).toFixed(1); };
+const f1 = v => { const r=Math.round(v*100)/100, d=Math.abs(r*10-Math.round(r*10))<1e-6?1:2; return (Object.is(r,-0)?0:r).toFixed(d); };
 
 /* ---------- inspector ---------- */
 const FIELDS=[
@@ -1667,7 +1773,7 @@ function duplicate(){
   const ids=ms.map(m=>{
     m.updateMatrix();
     const c=addMesh({name:m.userData.name.replace(/ copy( \d+)?$/,'')+' copy',shape:m.userData.shape,params:m.userData.params,hole:m.userData.hole,
-      geo:m.geometry,base:m.userData.base,color:m.userData.solid,matrix:m.matrix.toArray(),group:m.userData.group,gmat:m.userData.gmat});
+      geo:m.geometry,base:m.userData.base,color:m.userData.solid,matrix:m.matrix.toArray(),group:m.userData.group,gmat:m.userData.gmat,comp:m.userData.comp});
     c.position.x+=10; c.position.y+=10;
     return c.userData.id;
   });
@@ -1725,6 +1831,12 @@ registerAction({id:'projects',label:'Saved projects',icon:ICON.folder,bar:'file'
 registerAction({id:'save',label:'Save project',icon:ICON.save,bar:'file',run:saveProject});
 registerAction({id:'export',label:'Export STL',icon:ICON.export,text:'STL',bar:'file',primary:true,run:()=>exportSTL()});
 registerAction({id:'slice',label:'Slice for printing',icon:ICON.slice,bar:'file',pressed:()=>!$('sl-panel').hidden,run:()=>togglePanel('sl-panel')});
+registerAction({id:'measure',label:'Measure',icon:ICON.measure,bar:'view',key:'m',pressed:()=>!$('ms-panel').hidden,run:()=>togglePanel('ms-panel')});
+registerAction({id:'section',label:'Section view',icon:ICON.section,bar:'view',pressed:()=>!$('sec-panel').hidden,run:secToggle});
+registerAction({id:'shell',label:'Shell (hollow out)',icon:ICON.shell,bar:'edit',needs:'one',pressed:()=>!$('shl-panel').hidden,run:()=>togglePanel('shl-panel')});
+registerAction({id:'comp',label:'Make component',icon:ICON.comp,bar:'edit',inspector:true,needs:'one',enabled:()=>{ const m=selMeshes()[0]; return !!(m&&!m.userData.comp&&!m.userData.hole&&!cmp.sess); },run:compMake});
+registerAction({id:'compedit',label:'Edit component',icon:ICON.compedit,bar:'edit',inspector:true,needs:'one',enabled:()=>{ const m=selMeshes()[0]; return !!(m&&m.userData.comp&&!cmp.sess); },run:compEdit});
+registerAction({id:'sketch',label:'Sketch and extrude',icon:ICON.sketch,bar:'edit',pressed:()=>!$('rev-panel').hidden&&rev.mode==='extrude',run:()=>{ if(!$('rev-panel').hidden&&rev.mode==='extrude'){ togglePanel('rev-panel'); return; } if($('rev-panel').hidden) togglePanel('rev-panel'); revMode('extrude'); }});
 registerAction({id:'exportas',label:'Export as STL, 3MF or OBJ',text:'…',bar:'file',pressed:()=>!$('exp-panel').hidden,run:()=>togglePanel('exp-panel')});
 
 registerAction({id:'drop',label:'Drop to bed',icon:ICON.drop,inspector:true,needs:'some',run:dropToBed});
@@ -1764,21 +1876,21 @@ $('btn-open').addEventListener('click',pickFile);
 $('btn-svg').innerHTML=svg(ICON.svg).replace('width="22" height="22"','width="18" height="18"')+'<span>Import SVG</span>';
 $('btn-svg').addEventListener('click',pickFile);
 $('btn-rev').innerHTML=svg(ICON.revolve).replace('width="22" height="22"','width="18" height="18"')+'<span>Revolve</span>';
-$('btn-rev').addEventListener('click',()=>{ togglePanel('rev-panel'); if(mqNarrow.matches) setPanel('shelf',false); drawRev(); });
+$('btn-rev').addEventListener('click',()=>{ if(!$('rev-panel').hidden&&revExt()){ revMode('revolve'); return; } togglePanel('rev-panel'); if(mqNarrow.matches) setPanel('shelf',false); if(!$('rev-panel').hidden) revMode('revolve'); });
 
 function fillSelect(id,vals,cur,fmt){ $(id).innerHTML=vals.map(v=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+fmt(v)+'</option>').join(''); }
 function syncSettings(){
   fillSelect('s-bed',BEDS,st.bed,v=>v+' × '+v);
-  fillSelect('s-snap',SNAPS,st.snap,v=>v===0?'Off':v);
+  fillSelect('s-snap',SNAPS,st.snap,v=>v===0?'Off':v<0?'Auto (follows zoom)':v);
   fillSelect('s-rot',ROTS,st.rotSnap,v=>v===0?'Off':v);
-  fillSelect('s-obj',[1,0],st.objSnap?1:0,v=>v?'On':'Off');
+  fillSelect('s-obj',PULLS,st.objSnap?st.objPx:0,v=>({0:'Off',4:'Light',8:'Normal',14:'Strong'})[v]);
   fillSelect('s-handle',['n','l','h'],handleKey(),v=>HANDLE[v].label);
   applySnap();
 }
 $('s-bed').addEventListener('change',e=>{ st.bed=+e.target.value; buildBed(); updateStatus(); persist(); });
-$('s-snap').addEventListener('change',e=>{ st.snap=+e.target.value; applySnap(); persist(); });
+$('s-snap').addEventListener('change',e=>{ st.snap=+e.target.value; applySnap(); persist(); toast(st.snap<0?'Snap follows zoom':st.snap===0?'Grid snap off':'Grid snap '+st.snap+' mm'); });
 $('s-rot').addEventListener('change',e=>{ st.rotSnap=+e.target.value; applySnap(); persist(); });
-$('s-obj').addEventListener('change',e=>{ st.objSnap=e.target.value==='1'; persist(); });
+$('s-obj').addEventListener('change',e=>{ st.objPx=+e.target.value; st.objSnap=st.objPx>0; persist(); });
 let armed=0;
 $('btn-clear').addEventListener('click',e=>{
   const b=e.currentTarget;
@@ -2115,12 +2227,14 @@ $('tx-close').addEventListener('click',toggleText);
 $('tx-str').addEventListener('keydown',e=>{ if(e.key==='Enter') addText(); });
 
 /* ---------- panels, hollow and round edges (both work on flat-sided shapes) ---------- */
-const PANELS=['sl-panel','txt-panel','hol-panel','rnd-panel','rev-panel','prj-panel','exp-panel','arr-panel','spl-panel','pp-panel','ed-panel'];
+const PANELS=['sl-panel','txt-panel','hol-panel','rnd-panel','rev-panel','prj-panel','exp-panel','arr-panel','spl-panel','pp-panel','ed-panel','ms-panel','shl-panel'];
 function togglePanel(id){
   const show=$(id).hidden;
   if(show && st.pen) setPen(false);
   PANELS.forEach(p=>{ $(p).hidden=true; });
-  $(id).hidden=!show; updateUI();
+  $(id).hidden=!show; if(id!=='ms-panel'||!show) msClear();
+  if(typeof rev!=='undefined'){ rev.pick=false; skUpdate(); }
+  updateUI();
   return show;
 }
 const toggleHollow=()=>togglePanel('hol-panel');
@@ -2332,7 +2446,7 @@ function edgeIsCurved(tp,feats,ch){
 
 /* ---------- modelling tools: arrays, split, push/pull, edge chamfer and round ---------- */
 var tool={mesh:null,key:'',tp:null,feats:null,reg:null,chain:null,hl:null,pv:null}, lastMode=null;
-function toolMode(){ return !$('pp-panel').hidden?'pp':(!$('ed-panel').hidden?'ed':null); }
+function toolMode(){ return rev.pick?'sk':!$('pp-panel').hidden?'pp':(!$('ed-panel').hidden?'ed':(!$('ms-panel').hidden?'ms':null)); }
 function clearToolVis(){
   ['hl','pv'].forEach(k=>{ const o=tool[k]; if(o){ scene.remove(o); o.geometry.dispose(); o.material.dispose(); tool[k]=null; } });
   tool.reg=null; tool.chain=null; requestRender();
@@ -2360,6 +2474,8 @@ function triMesh(arr,op){
 }
 function toolTap(e){
   const md=toolMode(), r=dom.getBoundingClientRect();
+  if(md==='ms'){ measureTap(e); return; }
+  if(md==='sk'){ skPickTap(e); return; }
   ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ndc,camera);
   const hits=ray.intersectObjects(st.objs.filter(m=>m.visible&&!m.userData.locked),false);
   if(!hits.length) return;
@@ -2617,14 +2733,72 @@ function slcOutlines(tris,cfg){
   while(layers.length&&!layers[layers.length-1].outline.length) layers.pop();
   return {layers,minZ,maxZ,openLoops:open};
 }
+/* ---------- automatic supports ---------- */
+/* Work from the top layer down. Each overhang adds its footprint to a set that falls through the layers
+   until it meets the model, which is subtracted every layer. A one-layer gap is left above and below
+   the model so the supports snap off. 'plate' mode then throws away any column that cannot reach the bed. */
+function slcSupports(layers,cfg){
+  const N=layers.length, allow=cfg.layerH*Math.tan((cfg.overhangDeg||45)*Math.PI/180), xy=cfg.supXY||0.4;
+  const gap=Math.max(1,Math.round(0.2/cfg.layerH)), nif=2, S2=SLC_S*SLC_S;
+  const O=layers.map((L,i)=>i===0?[]:slcDropTiny(slcDiff(L.outline,slcOffset(layers[i-1].outline,allow)),0.3));
+  if(!O.some(o=>o.length)) return {layers:0,first:null};
+  const hb=cfg.bedX/2-2, hh=cfg.bedY/2-2, rect=[[{X:-hb*SLC_S,Y:-hh*SLC_S},{X:hb*SLC_S,Y:-hh*SLC_S},{X:hb*SLC_S,Y:hh*SLC_S},{X:-hb*SLC_S,Y:hh*SLC_S}]];
+  const reg=new Array(N).fill(null).map(()=>[]), carried=[];
+  let S=[];
+  for(let j=N-1;j>=0;j--){
+    const k=j+1+gap; if(k<N&&O[k].length) S=slcUnion(S,slcOffset(O[k],0.5));
+    let blocked=slcOffset(layers[j].outline,xy); if(j>0) blocked=slcUnion(blocked,slcOffset(layers[j-1].outline,xy));
+    S=S.length?slcInter(slcDiff(S,blocked),rect):[]; if(S.length) S=slcOffset(slcOffset(S,-0.3),0.3); S=slcDropTiny(S,0.5);
+    reg[j]=S;
+  }
+  let prev=null;
+  for(let j=0;j<N;j++){                                  // bottom-up: keep only what is held up from below
+    let r=reg[j];
+    if(cfg.support==='plate'&&j>0) r=prev&&prev.length?slcInter(r,slcOffset(prev,0.1)):[];
+    r=slcDropTiny(r,1.5); reg[j]=r; prev=r;
+  }
+  let n=0,first=null,area=0;
+  for(let j=0;j<N;j++){
+    if(!reg[j].length){ layers[j].sup=null; continue; }
+    let ov=[]; for(let q=1;q<=nif;q++){ const k=j+gap+q; if(k<N&&O[k].length) ov=slcUnion(ov,slcOffset(O[k],0.5)); }
+    layers[j].sup={all:reg[j],iface:ov.length?slcInter(ov,reg[j]):[]};
+    n++; if(first===null) first=layers[j].z; area+=reg[j].reduce((a,p)=>a+Math.abs(ClipperLib.Clipper.Area(p)),0)/S2;
+  }
+  return {layers:n,first,area};
+}
 async function slcBuild(layers,cfg,onProg){
-  const w=cfg.w, we=cfg.w-cfg.layerH*(1-Math.PI/4), W=cfg.walls, tick=()=>new Promise(r=>setTimeout(r,0)), N=layers.length;
+  const vase=!!cfg.vase, nb=Math.max(1,cfg.botLayers), w=cfg.w, we=cfg.w-cfg.layerH*(1-Math.PI/4), W=vase?1:cfg.walls, tick=()=>new Promise(r=>setTimeout(r,0)), N=layers.length;
   // regions inside the walls
   const A=layers.map(L=>{ const r=slcOffset(L.outline,-(w/2+(W-1)*we+we/2)); return slcDropTiny(r,0.02); });
   const dens=Math.max(0,Math.min(1,cfg.infill/100)), allSolid=dens>=0.95;
   let cur=[0,0];
   for(let i=0;i<N;i++){
     const L=layers[i], out=[]; L.paths=out;
+    if(vase&&i>=nb){                                   // spiral: one ring per layer, z rising all the way round
+      let best=null,ba=0; L.outline.forEach(p=>{ const a=ClipperLib.Clipper.Area(p); if(a>ba){ ba=a; best=p; } });
+      if(best){
+        const rr=slcOffset([best],-w/2).map(p=>({p,a:Math.abs(ClipperLib.Clipper.Area(p))})).sort((a,b)=>b.a-a.a)[0];
+        if(rr){
+          const ring=slcRing(rr.p); let bj=0,bd=1e18; ring.forEach((q,j)=>{ const d=(q[0]-cur[0])**2+(q[1]-cur[1])**2; if(d<bd){bd=d;bj=j;} });
+          const pts=ring.slice(bj).concat(ring.slice(0,bj)); pts.push(pts[0].slice());
+          let tot=0; for(let k=1;k<pts.length;k++) tot+=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]);
+          const z0=layers[i-1].z, zs=[z0]; let acc=0;
+          for(let k=1;k<pts.length;k++){ acc+=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]); zs.push(z0+(L.z-z0)*(tot>0?acc/tot:1)); }
+          out.push({t:'wall-outer',pts,zs,closed:true}); cur=pts[0];
+        }
+      }
+      L.vase=true;
+      if(onProg&&(i%4===3||i===N-1)){ onProg((i+1)/N); await tick(); }
+      continue;
+    }
+    if(L.sup&&L.sup.all.length&&!vase){
+      const reg=L.sup.all, inner=slcOffset(reg,-w*1.1), ifc=L.sup.iface.length?slcInter(L.sup.iface,inner):[];
+      const o1=slcOrderRings(slcOffset(reg,-w/2).filter(p=>p.length>=3).map(slcRing),cur); cur=o1.end; o1.paths.forEach(p=>out.push({t:'support',pts:p,closed:true}));
+      const sparse=ifc.length?slcDiff(inner,ifc):inner, d=Math.max(0.05,Math.min(0.6,(cfg.supDensity||15)/100));
+      const ml=Math.max(0.8,w*2);
+      if(ifc.length){ const o2=slcOrderLines(slcFill(ifc,we/0.8,(i%2)?135:45,ml),cur); cur=o2.end; o2.paths.forEach(p=>out.push({t:'support-if',pts:p,closed:false})); }
+      if(sparse.length){ const o3=slcOrderLines(slcFill(sparse,we/d,45,ml),cur); cur=o3.end; o3.paths.forEach(p=>out.push({t:'support',pts:p,closed:false})); }
+    }
     // walls: inner rings first, outer last
     const rings=[]; for(let k=0;k<W;k++) rings.push(slcOffset(L.outline,-(w/2+k*we)).filter(p=>p.length>=3));
     for(let k=W-1;k>=0;k--){
@@ -2634,7 +2808,7 @@ async function slcBuild(layers,cfg,onProg){
     // top and bottom skins
     let solid=[];
     if(A[i].length){
-      if(allSolid) solid=A[i];
+      if(allSolid||vase) solid=A[i];
       else{
         let up=A[i], dn=A[i];
         for(let k=1;k<=cfg.topLayers;k++){ up=i+k<N?slcInter(up,A[i+k]):[]; if(!up.length) break; }
@@ -2649,7 +2823,7 @@ async function slcBuild(layers,cfg,onProg){
       const lines=slcFill(slcOffset(solid,0.05*w),we,(i%2)?135:45,minLen);
       const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'solid',pts:p,closed:false}));
     }
-    if(!allSolid&&dens>0&&A[i].length){
+    if(!allSolid&&!vase&&dens>0&&A[i].length){
       const sparse=solid.length?slcDiff(A[i],solid):A[i];
       let lines;
       if(cfg.pattern==='grid') lines=slcFill(sparse,we*2/dens,45,minLen).concat(slcFill(sparse,we*2/dens,135,minLen));
@@ -2669,10 +2843,10 @@ async function slcBuild(layers,cfg,onProg){
 function slcFmt(n,d){ return (+n).toFixed(d).replace(/\.?0+$/,''); }
 function slcGcode(layers,cfg){
   const ox=cfg.bedX/2, oy=cfg.bedY/2, fil=Math.PI*(cfg.filD/2)**2;
-  const sp={'wall-outer':cfg.vOuter,'wall-inner':cfg.vInner,solid:cfg.vSolid,infill:cfg.vInfill,skirt:cfg.vOuter,brim:cfg.vOuter};
+  const sp={'wall-outer':cfg.vOuter,'wall-inner':cfg.vInner,solid:cfg.vSolid,infill:cfg.vInfill,skirt:cfg.vOuter,brim:cfg.vOuter,support:Math.min(cfg.vInfill,60),'support-if':Math.min(cfg.vSolid,45)};
   const ePerMm=h=>h*(cfg.w-h*(1-Math.PI/4))/fil*cfg.flow;
   const sub=s=>s.replace(/\{bed\}/g,cfg.bed).replace(/\{bedFirst\}/g,cfg.bedFirst).replace(/\{nozzle\}/g,cfg.nozzle).replace(/\{nozzleFirst\}/g,cfg.nozzleFirst).replace(/\{bedx\}/g,cfg.bedX).replace(/\{bedy-20\}/g,cfg.bedY-20).replace(/\{bedy-10\}/g,cfg.bedY-10).replace(/\{bedy\}/g,cfg.bedY);
-  const g=[]; let filament=0, time=0, x=0,y=0,z=0,lastF=-1,printLen=0;
+  const g=[]; let filament=0, supFil=0, time=0, x=0,y=0,z=0,lastF=-1,printLen=0;
   g.push('; generated by Tinkerbench','; layers '+layers.length+' · layer '+cfg.layerH+' mm · walls '+cfg.walls+' · infill '+cfg.infill+'% '+cfg.pattern,'; line width '+cfg.w+' mm · nozzle '+cfg.nozzle+' C · bed '+cfg.bed+' C','');
   g.push(sub(cfg.startGcode),'M83 ; relative extrusion','G90','G92 E0','M107');
   if(cfg.klipperInfo) g.push('SET_PRINT_STATS_INFO TOTAL_LAYER='+layers.length);
@@ -2684,32 +2858,90 @@ function slcGcode(layers,cfg){
     if(cfg.klipperInfo) g.push('SET_PRINT_STATS_INFO CURRENT_LAYER='+(i+1));
     if(i===1){ g.push('M104 S'+cfg.nozzle,'M140 S'+cfg.bed); }
     if(i===cfg.fanLayer) g.push('M106 S'+Math.round(cfg.fan*2.55));
-    if(!retracted&&i>0){ g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed)); retracted=true; }
-    g.push('G1 Z'+slcFmt(L.z+(cfg.zhop||0),3)+F(cfg.vTravelZ)); time+=Math.abs(L.z-z)/cfg.vTravelZ; z=L.z;
+    const spiral=!!L.vase;
+    if(!spiral){
+      if(!retracted&&i>0){ g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed)); retracted=true; }
+      g.push('G1 Z'+slcFmt(L.z+(cfg.zhop||0),3)+F(cfg.vTravelZ)); time+=Math.abs(L.z-z)/cfg.vTravelZ; z=L.z;
+    }
     const first=i===0, e=ePerMm(L.h)*(first?cfg.firstFlow:1);
     L.paths.forEach(P=>{
+      if(P.preview) return;
       const p0=P.pts[0], tx=p0[0]+ox, ty=p0[1]+oy, dist=Math.hypot(tx-x,ty-y);
-      if(dist>0.001){
+      if(dist>0.001&&spiral&&dist<3&&!retracted){ const ee=dist*e; filament+=ee; printLen+=dist; g.push('G1 X'+slcFmt(tx,3)+' Y'+slcFmt(ty,3)+(P.zs?' Z'+slcFmt(P.zs[0],3):'')+' E'+slcFmt(ee,5)+F(cfg.vOuter)); move(tx,ty,cfg.vOuter); }
+      else if(dist>0.001){
         if(dist>cfg.retractMin&&!retracted&&cfg.retract>0){ g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed)); retracted=true; time+=cfg.retract/cfg.retractSpeed; }
         g.push('G0 X'+slcFmt(tx,3)+' Y'+slcFmt(ty,3)+F(cfg.vTravel)); move(tx,ty,cfg.vTravel);
       }
       if(cfg.zhop&&L.paths[0]===P){ g.push('G1 Z'+slcFmt(L.z,3)+F(cfg.vTravelZ)); }
       if(retracted){ g.push('G1 E'+cfg.retract+F(cfg.retractSpeed)); retracted=false; time+=cfg.retract/cfg.retractSpeed; }
+      if(spiral&&P.zs&&Math.abs(z-P.zs[0])>1e-6){ z=P.zs[0]; }
       const v=first?Math.min(cfg.vFirst,sp[P.t]):sp[P.t];
       for(let k=1;k<P.pts.length;k++){
         const q=P.pts[k], qx=q[0]+ox, qy=q[1]+oy, d=Math.hypot(qx-x,qy-y); if(d<0.001) continue;
-        const ee=d*e; filament+=ee; printLen+=d;
-        g.push('G1 X'+slcFmt(qx,3)+' Y'+slcFmt(qy,3)+' E'+slcFmt(ee,5)+F(v)); move(qx,qy,v); time+=d/v*0.12;
+        const ee=d*e; filament+=ee; if(P.t[0]==='s'&&P.t[1]==='u'&&P.t[2]==='p') supFil+=ee; printLen+=d;
+        g.push('G1 X'+slcFmt(qx,3)+' Y'+slcFmt(qy,3)+(P.zs?' Z'+slcFmt(P.zs[k],3):'')+' E'+slcFmt(ee,5)+F(v)); move(qx,qy,v); time+=d/v*0.12;
       }
     });
   });
   g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed),'M107',sub(cfg.endGcode));
-  return {text:g.join('\n')+'\n',filamentMm:filament,grams:filament*fil/1000*cfg.density,seconds:time,printMm:printLen};
+  return {text:g.join('\n')+'\n',supportGrams:supFil*fil/1000*cfg.density,filamentMm:filament,grams:filament*fil/1000*cfg.density,seconds:time,printMm:printLen};
 }
-
+/* ---------- print check: spots the things that make prints fail, from the layer outlines alone ---------- */
+function slcCheck(layers,cfg,H){
+  const out=[], add=(lvl,msg)=>out.push({lvl,msg}), S2=SLC_S*SLC_S;
+  const A=layers.map(L=>Math.abs(L.outline.reduce((a,p)=>a+ClipperLib.Clipper.Area(p),0))/S2);
+  const A0=A[0]||0, Amax=Math.max(...A), top=layers[layers.length-1].z;
+  // centre of mass of the stacked outlines against the footprint on the bed
+  let wsum=0,cx=0,cy=0; const cent=[];
+  layers.forEach((L,i)=>{ let a=0,x=0,y=0;
+    L.outline.forEach(p=>{ let pa=0,px=0,py=0; for(let k=0;k<p.length;k++){ const q=p[k], r=p[(k+1)%p.length], c=q.X*r.Y-r.X*q.Y; pa+=c; px+=(q.X+r.X)*c; py+=(q.Y+r.Y)*c; }
+      a+=pa/2; if(pa!==0){ x+=px/6; y+=py/6; } });
+    a/=S2; x/=S2*SLC_S; y/=S2*SLC_S; const ar=Math.abs(a); cent.push(a!==0?[x/a,y/a]:null);
+    if(a!==0){ wsum+=ar*L.h; cx+=ar*L.h*x/a; cy+=ar*L.h*y/a; } });
+  cx/=wsum||1; cy/=wsum||1;
+  // support polygon = convex hull of the first layer
+  const pts=[]; (layers[0].outline||[]).forEach(p=>p.forEach(q=>pts.push([q.X/SLC_S,q.Y/SLC_S]))); pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]); let hull=[];
+  if(pts.length>2){ const lo=[]; for(const q of pts){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0) lo.pop(); lo.push(q); }
+    const up=[]; for(let k=pts.length-1;k>=0;k--){ const q=pts[k]; while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0) up.pop(); up.push(q); } lo.pop(); up.pop(); hull=lo.concat(up); }
+  let margin=-1e9; if(hull.length>=3){ margin=1e9; for(let k=0;k<hull.length;k++){ const a=hull[k], b=hull[(k+1)%hull.length], l=Math.hypot(b[0]-a[0],b[1]-a[1])||1; margin=Math.min(margin,cr(a,b,[cx,cy])/l); } }
+  if(margin<0) add('bad','The centre of mass sits '+Math.abs(margin).toFixed(1)+' mm outside the part touching the bed. It will tip or peel off. Rotate it so a flat face sits on the bed.');
+  else if(margin<2&&top>15) add('warn','The centre of mass is only '+margin.toFixed(1)+' mm inside the base. It is close to tipping. Add a brim or lay it on a wider face.');
+  // contact with the bed
+  if(A0<20&&top>8) add('bad','Only '+A0.toFixed(0)+' mm² touches the bed. That is very unlikely to stick. Lay it on a flat face or add a wide brim.');
+  else if(A0<0.25*Amax&&top>8) add('warn','Only '+Math.round(100*A0/Amax)+'% of the widest cross-section touches the bed ('+A0.toFixed(0)+' mm²). Adhesion will be poor. Try a brim of 6–8 mm, or flip the model.');
+  else if(A0<100&&top>25) add('warn','Small contact patch ('+A0.toFixed(0)+' mm²) for a '+top.toFixed(0)+' mm tall part. A brim will help it stay put.');
+  const asp=top/Math.sqrt(Math.max(A0,1)); if(asp>8&&A0>=20) add('bad','Very tall and thin ('+top.toFixed(0)+' mm high on '+A0.toFixed(0)+' mm²). It will wobble and likely break off. Use a brim and slow down, or print it lying down.');
+  else if(asp>5&&A0>=20) add('warn','Tall for its base ('+top.toFixed(0)+' mm high on '+A0.toFixed(0)+' mm²). A brim and lower speeds will help.');
+  // lean: how far the top drifts sideways over the height
+  const lowC=cent.filter(Boolean).slice(0,3), hiC=cent.filter(Boolean).slice(-3);
+  if(lowC.length&&hiC.length&&top>10){ const m=a=>[a.reduce((s,c)=>s+c[0],0)/a.length,a.reduce((s,c)=>s+c[1],0)/a.length], a=m(lowC), b=m(hiC), lean=Math.atan2(Math.hypot(b[0]-a[0],b[1]-a[1]),top)*180/Math.PI;
+    if(lean>25) add(margin<0?'info':'warn','The model leans about '+Math.round(lean)+'° over its height.'); }
+  // overhangs and floating pieces
+  const allow=cfg.layerH*Math.tan((cfg.overhangDeg||45)*Math.PI/180); let overArea=0,overLayers=0,firstOver=null,float=null,maxW=0,widest=null;
+  for(let i=1;i<layers.length;i++){
+    const prev=slcOffset(layers[i-1].outline,allow);
+    const un=slcDropTiny(slcDiff(layers[i].outline,prev),0.6), ua=un.reduce((a,p)=>a+Math.abs(ClipperLib.Clipper.Area(p)),0)/S2;
+    layers[i].over=un.map(slcRing);
+    if(ua>0){ overArea+=ua; overLayers++; if(firstOver===null) firstOver=layers[i].z;
+      for(const t of [1,2.5,5,10,20]){ if(slcOffset(un,-t/2).length){ if(t>maxW){ maxW=t; widest=layers[i].z; } } else break; } }
+    if(float===null) layers[i].outline.forEach(p=>{ if(float!==null) return; if(ClipperLib.Clipper.Area(p)/S2>2&&slcInter([p],prev).length===0) float=layers[i].z; });
+  }
+  const supOn=cfg.support&&cfg.support!=='off'&&!cfg.vase;
+  if(float!==null) add(supOn?'warn':'bad',supOn?'A piece of the model starts in mid-air at Z '+float.toFixed(1)+' mm. Supports will hold it, but it is not joined to the rest of the model.':'A piece of the model starts in mid-air at Z '+float.toFixed(1)+' mm with nothing under it. It will print as loose strings. Join it to the rest or turn supports on.');
+  if(supOn&&firstOver!==null) add('info','Overhangs found from Z '+firstOver.toFixed(1)+' mm. Supports are on (green in the preview), expect rougher surfaces where they touch.');
+  else if(maxW>=5) add('bad','Unsupported spans more than '+maxW+' mm wide (first at Z '+firstOver.toFixed(1)+' mm, red in the preview). Expect sagging or spaghetti. This slicer has no supports yet, so reorient the model or split it.');
+  else if(maxW>=2.5||overArea>150) add('warn','Overhangs steeper than '+(cfg.overhangDeg||45)+'° over '+overLayers+' layers, first at Z '+firstOver.toFixed(1)+' mm (red in the preview). Expect rough undersides, or sagging on the wider parts.');
+  // features too thin to print as a proper wall
+  if(!cfg.vase){ let thin=0,tot=0; const step=Math.max(1,Math.floor(layers.length/40));
+    for(let i=0;i<layers.length;i+=step){ const o=layers[i].outline; if(!o.length) continue; const ope=slcOffset(slcOffset(o,-cfg.w*0.5),cfg.w*0.5), th=slcDropTiny(slcDiff(o,ope),0.15);
+      thin+=th.reduce((a,p)=>a+Math.abs(ClipperLib.Clipper.Area(p)),0)/S2; tot+=A[i]; }
+    if(tot>0&&thin/tot>0.05&&thin/Math.ceil(layers.length/step)>0.4) add('warn','Parts of the model are thinner than one line width ('+cfg.w+' mm) and will print weak or be skipped.'); }
+  return out;
+}
 /* ---------- slicer panel ---------- */
 const SLK='tinkerbench.slicer';
-const SL_FIELDS=['lh','fh','lw','wl','tp','bt','if','ip','nz','bd','vo','vi','vf','vt','fn','rt','br','url'];
+const SL_FIELDS=['lh','fh','lw','wl','tp','bt','if','ip','nz','bd','vo','vi','vf','vt','fn','rt','br','su','sd','sa','url'];
 var sl={res:null,gcode:'',busy:false,prev:null,cur:null,counts:null,armed:0};
 const SL_START=`; Sovol SV06 on Klipper. Edit freely. {bed} {nozzle} {bedx} {bedy} {bedy-20} are filled in.
 M140 S{bedFirst}
@@ -2738,18 +2970,18 @@ M140 S0
 M107
 M84`;
 function slLoad(){
-  try{ const o=JSON.parse(localStorage.getItem(SLK)||'{}'); SL_FIELDS.forEach(k=>{ if(o[k]!==undefined&&$('sl-'+k)) $('sl-'+k).value=o[k]; }); $('sl-st-g').value=o.sg||SL_START; $('sl-en-g').value=o.eg||SL_END; $('sl-kl').checked=o.kl!==false; }
+  try{ const o=JSON.parse(localStorage.getItem(SLK)||'{}'); SL_FIELDS.forEach(k=>{ if(o[k]!==undefined&&$('sl-'+k)) $('sl-'+k).value=o[k]; }); $('sl-st-g').value=o.sg||SL_START; $('sl-en-g').value=o.eg||SL_END; $('sl-kl').checked=o.kl!==false; $('sl-vs').checked=!!o.vs; }
   catch(e){ $('sl-st-g').value=SL_START; $('sl-en-g').value=SL_END; }
   if(!$('sl-st-g').value) $('sl-st-g').value=SL_START; if(!$('sl-en-g').value) $('sl-en-g').value=SL_END;
 }
-function slSave(){ try{ const o={sg:$('sl-st-g').value,eg:$('sl-en-g').value,kl:$('sl-kl').checked}; SL_FIELDS.forEach(k=>{ o[k]=$('sl-'+k).value; }); localStorage.setItem(SLK,JSON.stringify(o)); }catch(e){} }
+function slSave(){ try{ const o={sg:$('sl-st-g').value,eg:$('sl-en-g').value,kl:$('sl-kl').checked,vs:$('sl-vs').checked}; SL_FIELDS.forEach(k=>{ o[k]=$('sl-'+k).value; }); localStorage.setItem(SLK,JSON.stringify(o)); }catch(e){} }
 function slCfg(){
   const n=(k,d,lo,hi)=>{ const v=parseFloat($('sl-'+k).value); return Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):d; };
   const nozzle=n('nz',205,150,300), bed=n('bd',60,0,120), lh=n('lh',0.2,0.05,0.4);
   return {layerH:lh,firstH:n('fh',0.2,0.1,0.4),w:n('lw',0.45,0.3,0.8),walls:Math.round(n('wl',2,1,8)),topLayers:Math.round(n('tp',5,1,20)),botLayers:Math.round(n('bt',4,1,20)),
     infill:n('if',15,0,100),pattern:$('sl-ip').value,vFirst:20,vOuter:n('vo',35,5,200),vInner:n('vi',55,5,300),vSolid:Math.min(n('vi',55,5,300),50),vInfill:n('vf',70,5,300),vTravel:n('vt',120,20,500),vTravelZ:10,
     nozzle,nozzleFirst:nozzle,bed,bedFirst:bed,fan:n('fn',100,0,100),fanLayer:2,retract:n('rt',0.8,0,6),retractSpeed:35,retractMin:1.5,zhop:0,filD:1.75,flow:1,firstFlow:1,density:1.24,
-    brim:n('br',0,0,20),skirtLoops:2,skirtGap:4,bedX:st.bed,bedY:st.bed,klipperInfo:$('sl-kl').checked,startGcode:$('sl-st-g').value,endGcode:$('sl-en-g').value};
+    brim:n('br',0,0,20),skirtLoops:2,skirtGap:4,bedX:st.bed,bedY:st.bed,klipperInfo:$('sl-kl').checked,vase:$('sl-vs').checked,overhangDeg:n('sa',45,20,80),support:$('sl-vs').checked?'off':$('sl-su').value,supDensity:n('sd',15,5,50),supXY:0.4,startGcode:$('sl-st-g').value,endGcode:$('sl-en-g').value};
 }
 const slTime=s=>{ const m=Math.round(s/60); return m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min'; };
 function slClearPreview(){
@@ -2757,7 +2989,7 @@ function slClearPreview(){
   ['prev','cur'].forEach(k=>{ const o=sl[k]; if(o){ scene.remove(o); o.geometry.dispose(); o.material.dispose(); sl[k]=null; } });
   $('sl-bar').hidden=true; world.visible=true; requestRender();
 }
-const SL_COL={'wall-outer':[0.31,0.76,0.85],'wall-inner':[0.23,0.56,0.65],solid:[0.88,0.65,0.29],infill:[0.79,0.34,0.24],skirt:[0.6,0.6,0.6],brim:[0.6,0.6,0.6]};
+const SL_COL={over:[1,0.25,0.25],'wall-outer':[0.31,0.76,0.85],'wall-inner':[0.23,0.56,0.65],solid:[0.88,0.65,0.29],infill:[0.79,0.34,0.24],skirt:[0.6,0.6,0.6],brim:[0.6,0.6,0.6],support:[0.35,0.75,0.4],'support-if':[0.55,0.9,0.5]};
 function slPreview(layers){
   slClearPreview();
   let nv=0; layers.forEach(L=>L.paths.forEach(P=>{ nv+=Math.max(0,P.pts.length-1)*2; }));
@@ -2796,10 +3028,15 @@ async function slSlice(){
   try{
     await new Promise(r=>setTimeout(r,30));
     const R=slcOutlines(tris,cfg); if(!R||!R.layers.length){ toast('Nothing to slice at this height.'); return; }
+    const checks=slcCheck(R.layers,cfg); let sup=null;
+    if(cfg.support!=='off'){ sup=slcSupports(R.layers,cfg); if(!sup.layers) sup=null; }
+    if(cfg.vase&&R.layers.length>cfg.botLayers){ const L=R.layers[Math.min(R.layers.length-1,cfg.botLayers)]; if(L.outline.length>1||L.outline.some(p=>ClipperLib.Clipper.Area(p)<0)) checks.unshift({lvl:'warn',msg:'Vase mode prints only the largest outline. Extra parts and inner holes are ignored.'}); if(R.layers.length<=cfg.botLayers) checks.unshift({lvl:'bad',msg:'The model is shorter than the solid base. Lower the Bottom layers.'}); }
     await slcBuild(R.layers,cfg,p=>{ $('sl-go').textContent='Slicing '+Math.round(p*100)+'%'; });
+    R.layers.forEach(L=>{ (L.over||[]).forEach(r=>{ if(r.length>2) L.paths.push({t:'over',pts:r.concat([r[0]]),closed:true,preview:true}); }); });
     const G=slcGcode(R.layers,cfg); sl.gcode=G.text; sl.res=R;
     if(R.openLoops>0) warn.push(R.openLoops+' open outline'+(R.openLoops>1?'s were':' was')+' skipped. The mesh may not be watertight there.');
-    $('sl-sum').innerHTML='<b>'+R.layers.length+' layers</b> · '+slTime(G.seconds)+' · '+(G.filamentMm/1000).toFixed(2)+' m ('+G.grams.toFixed(1)+' g PLA)'+(nt>300000?'<br>Large mesh, slicing was slow.':'')+(warn.length?'<br>'+warn.join('<br>'):'');
+    const ico={bad:'✖',warn:'⚠',info:'ℹ'}, ck=checks.length?checks.map(c=>'<div class="ck ck-'+c.lvl+'"><span>'+ico[c.lvl]+'</span><span>'+escHtml(c.msg)+'</span></div>').join(''):'<div class="ck ck-ok"><span>✔</span><span>Print check: nothing risky found.</span></div>';
+    $('sl-sum').innerHTML='<b>'+R.layers.length+' layers</b>'+(cfg.vase?' · vase':'')+' · '+slTime(G.seconds)+' · '+(G.filamentMm/1000).toFixed(2)+' m ('+G.grams.toFixed(1)+' g PLA'+(sup?', '+G.supportGrams.toFixed(1)+' g of it supports':'')+')'+(nt>300000?'<br>Large mesh, slicing was slow.':'')+(warn.length?'<br>'+warn.join('<br>'):'')+ck;
     $('sl-dl').disabled=false; $('sl-up').disabled=false; $('sl-upp').disabled=false;
     $('sl-sum2').innerHTML=$('sl-sum').innerHTML; tc.detach(); slPreview(R.layers); fitView();
     if(!$('sl-panel').hidden) togglePanel('sl-panel');
@@ -2834,6 +3071,8 @@ $('sl-ly').addEventListener('input',slLayer);
 $('sl-clear').addEventListener('click',slClearPreview);
 $('sl-showm').addEventListener('click',()=>{ world.visible=!world.visible; requestRender(); });
 $('sl-panel').addEventListener('change',slSave);
+$('sl-vs').addEventListener('change',()=>{ $('sl-vs-h').hidden=!$('sl-vs').checked; });
+$('sl-vs-h').hidden=!$('sl-vs').checked;
 slLoad();
 
 /* ---------- plates, new project, percentage scaling ---------- */
@@ -2967,46 +3206,501 @@ function importSVG(text,fname){
   }catch(err){ toast('Could not turn that SVG into a solid'); }
 }
 
-/* ---------- revolve (draw a profile, spin it into a solid) ---------- */
-const rev={pts:[],drawing:false};
+/* ---------- measure, and corner snapping ---------- */
+const topoCache=new Map();
+function topoOf(m){                                          // welded topology of a mesh in world space, cached until it moves or changes
+  m.updateMatrixWorld(true);
+  const key=m.geometry.uuid+m.matrixWorld.elements.join(',');
+  let c=topoCache.get(m.uuid); if(c&&c.key===key) return c;
+  const tp=meshTopo(worldTriangles(m)); c={key,tp,feats:null,corners:null}; topoCache.set(m.uuid,c);
+  if(topoCache.size>60) topoCache.delete(topoCache.keys().next().value); return c;
+}
+function featsOf(c){ if(!c.feats) c.feats=featureEdges(c.tp,25); return c.feats; }
+function cornersOf(c){                                       // sharp corners only: 3+ feature edges, or 2 that turn more than 25 degrees
+  if(c.corners) return c.corners;
+  const tp=c.tp, adj=new Map(); featsOf(c).forEach(f=>{ (adj.get(f.a)||adj.set(f.a,[]).get(f.a)).push(f.b); (adj.get(f.b)||adj.set(f.b,[]).get(f.b)).push(f.a); });
+  const out=[]; adj.forEach((nb,v)=>{
+    let ok=nb.length>=3;
+    if(!ok&&nb.length===2){ const a=v3unit(v3sub(tp.V[nb[0]],tp.V[v])), b=v3unit(v3sub(tp.V[nb[1]],tp.V[v])); ok=v3dot(a,b)>-0.906; }   // cos(155 deg)
+    if(ok) out.push(tp.V[v]);
+  });
+  c.corners=out; return out;
+}
+const ms={pts:[],vis:[],group:null};
+function wppAt(pt){ const H=Math.max(200,dom.clientHeight||600); return 2*camera.position.distanceTo(new THREE.Vector3(...pt))*Math.tan(rad(camera.fov/2))/H; }
+function snapPick(h){                                        // vertex, then edge, then plain surface point
+  const c=topoOf(h.object), tp=c.tp, p=h.point.toArray(), tol=Math.max(0.05,wppAt(p)*16);
+  let best=null,bd=tol;
+  tp.T[h.faceIndex].forEach(vi=>{ const d=v3len(v3sub(tp.V[vi],p)); if(d<bd){ bd=d; best={p:tp.V[vi],k:'corner'}; } });
+  featsOf(c).forEach(f=>{ [f.a,f.b].forEach(vi=>{ const d=v3len(v3sub(tp.V[vi],p)); if(d<bd){ bd=d; best={p:tp.V[vi],k:'corner'}; } }); });
+  if(best) return best;
+  let eb=null; bd=tol; featsOf(c).forEach(f=>{ const A=tp.V[f.a],B=tp.V[f.b], d=segDist(p,A,B); if(d<bd){ bd=d; eb={A,B}; } });
+  if(eb){
+    const mid=v3mul(v3add(eb.A,eb.B),0.5); if(v3len(v3sub(mid,p))<tol*1.2) return {p:mid,k:'edge middle'};
+    const ab=v3sub(eb.B,eb.A), t=Math.max(0,Math.min(1,v3dot(v3sub(p,eb.A),ab)/(v3dot(ab,ab)||1)));
+    return {p:v3add(eb.A,v3mul(ab,t)),k:'edge'};
+  }
+  return {p,k:'surface'};
+}
+function msDraw(){
+  if(ms.group){ scene.remove(ms.group); ms.group.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); ms.group=null; }
+  if(!ms.pts.length){ requestRender(); return; }
+  const g=new THREE.Group(), col=new THREE.Color(css('--accent')), mat=new THREE.LineBasicMaterial({color:col,depthTest:false,transparent:true});
+  const r=Math.max(0.2,wppAt(ms.pts[0].p)*6);
+  ms.pts.forEach((q,i)=>{ const s=new THREE.Mesh(new THREE.SphereGeometry(r,12,8),new THREE.MeshBasicMaterial({color:i===1?0xffc857:col,depthTest:false})); s.position.set(...q.p); s.renderOrder=30; s.raycast=()=>{}; g.add(s); });
+  if(ms.pts.length>1){ const pos=[]; ms.pts.forEach(q=>pos.push(...q.p)); const l=new THREE.Line(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(pos,3)),mat); l.renderOrder=29; l.raycast=()=>{}; g.add(l); }
+  ms.group=g; scene.add(g); requestRender();
+}
+function msReport(){
+  const P=ms.pts, el=$('ms-out');
+  if(!P.length){ el.innerHTML=''; $('ms-st').textContent='Tap a corner, edge or face. It snaps to corners first.'; return; }
+  const fm=v=>(Math.round(v*100)/100).toFixed(2);
+  let h='<div>Point A <b>'+P[0].k+'</b>: '+P[0].p.map(fm).join(', ')+'</div>';
+  if(P.length>1){ const d=v3sub(P[1].p,P[0].p); h+='<div>Distance A–B <b>'+fm(v3len(d))+' mm</b></div><div>ΔX '+fm(d[0])+' · ΔY '+fm(d[1])+' · ΔZ '+fm(d[2])+' · flat (XY) '+fm(Math.hypot(d[0],d[1]))+'</div>'; }
+  if(P.length>2){ const a=v3sub(P[0].p,P[1].p), b=v3sub(P[2].p,P[1].p), la=v3len(a), lb=v3len(b); const ang=la>1e-9&&lb>1e-9?deg(Math.acos(Math.max(-1,Math.min(1,v3dot(a,b)/(la*lb))))):0; h+='<div>Distance B–C <b>'+fm(lb)+' mm</b> · angle at B <b>'+fm(ang)+'°</b></div>'; }
+  el.innerHTML=h; $('ms-st').textContent=P.length<3?'Tap another point. A third point gives an angle.':'Tap again to start a new measurement.';
+}
+function msClear(){ ms.pts=[]; msDraw(); if($('ms-out')) msReport(); }
+function measureTap(e){
+  const r=dom.getBoundingClientRect();
+  ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(st.objs.filter(m=>m.visible),false); if(!hits.length) return;
+  const q=snapPick(hits[0]); if(ms.pts.length>=3) ms.pts=[]; ms.pts.push(q); msDraw(); msReport();
+}
+$('ms-clear').addEventListener('click',msClear); $('ms-close').addEventListener('click',()=>togglePanel('ms-panel'));
+
+/* ---------- section view (a viewing aid, never changes the model) ---------- */
+const sec={on:false,axis:'x',pos:0,flip:false,plane:new THREE.Plane(new THREE.Vector3(-1,0,0),0)};
+const secU={uCut:{value:0},uCutCol:{value:new THREE.Color(0xe0a23c)}};
+THREE.MeshStandardMaterial.prototype.onBeforeCompile=function(sh){      // inside faces seen through the cut are painted one flat colour, so a closed solid looks filled
+  sh.uniforms.uCut=secU.uCut; sh.uniforms.uCutCol=secU.uCutCol;
+  sh.fragmentShader='uniform float uCut; uniform vec3 uCutCol;\n'+sh.fragmentShader.replace('#include <dithering_fragment>','if(uCut>0.5&&!gl_FrontFacing) gl_FragColor=vec4(uCutCol,1.0);\n#include <dithering_fragment>');
+};
+renderer.localClippingEnabled=true;
+function secApply(){
+  const n=new THREE.Vector3(); n[sec.axis]=sec.flip?1:-1;
+  sec.plane.normal.copy(n); sec.plane.constant=sec.flip?-sec.pos:sec.pos;
+  secU.uCut.value=sec.on?1:0;
+  st.objs.forEach(m=>m.traverse(o=>{ const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[]; ms.forEach(mt=>{ mt.clippingPlanes=sec.on?[sec.plane]:null; if(o===m) mt.side=sec.on?THREE.DoubleSide:THREE.FrontSide; mt.needsUpdate=true; }); }));
+  requestRender();
+}
+function secFaceAway(){ sec.flip=camera.position[sec.axis]<sec.pos; $('sec-f').checked=sec.flip; }   // keep the half away from the camera, so the cut shows the inside
+function secSync(){
+  const h=st.bed/2, ax=sec.axis, lo=ax==='z'?0:-h, hi=ax==='z'?250:h;
+  $('sec-p').min=lo; $('sec-p').max=hi; sec.pos=clamp(sec.pos,lo,hi); $('sec-p').value=sec.pos; $('sec-n').value=Math.round(sec.pos*10)/10;
+}
+function secToggle(){
+  const show=$('sec-panel').hidden; $('sec-panel').hidden=!show; sec.on=show;
+  if(show){ const b=st.objs.length?new THREE.Box3().setFromObject(world):null; if(b&&!b.isEmpty()) sec.pos=Math.round(b.getCenter(new THREE.Vector3())[sec.axis]); secSync(); secFaceAway(); }
+  secApply(); updateUI();
+}
+$('sec-a').addEventListener('change',e=>{ sec.axis=e.target.value; const b=new THREE.Box3().setFromObject(world); if(!b.isEmpty()) sec.pos=Math.round(b.getCenter(new THREE.Vector3())[sec.axis]); secSync(); secFaceAway(); secApply(); });
+$('sec-p').addEventListener('input',e=>{ sec.pos=+e.target.value; $('sec-n').value=Math.round(sec.pos*10)/10; secApply(); });
+$('sec-n').addEventListener('change',e=>{ sec.pos=+e.target.value||0; secSync(); secApply(); });
+$('sec-f').addEventListener('change',e=>{ sec.flip=e.target.checked; secApply(); });
+$('sec-x').addEventListener('click',secToggle);
+const secKeep=setInterval(()=>{ if(sec.on&&st.objs.some(m=>{ const mt=m.material; return !mt.clippingPlanes||mt.side!==THREE.DoubleSide; })) secApply(); },400);   // new shapes made while the section is open pick it up
+
+/* ---------- shell: hollow out any closed solid ---------- */
+function solve3(A,b){
+  const [a,bb,c,d,e,f,g,h,i]=A, det=a*(e*i-f*h)-bb*(d*i-f*g)+c*(d*h-e*g); if(Math.abs(det)<1e-12) return null;
+  const inv=[(e*i-f*h),(c*h-bb*i),(bb*f-c*e),(f*g-d*i),(a*i-c*g),(c*d-a*f),(d*h-e*g),(bb*g-a*h),(a*e-bb*d)].map(v=>v/det);
+  return [inv[0]*b[0]+inv[1]*b[1]+inv[2]*b[2],inv[3]*b[0]+inv[4]*b[1]+inv[5]*b[2],inv[6]*b[0]+inv[7]*b[1]+inv[8]*b[2]];
+}
+function shellInner(tr,t,open){                              // the solid shrunk by t on every face, corners mitred
+  const tp=meshTopo(tr); let vol=0;
+  tp.T.forEach(([a,b,c])=>{ vol+=v3dot(tp.V[a],v3cross(tp.V[b],tp.V[c]))/6; });
+  const sgn=vol<0?-1:1, inc=tp.V.map(()=>[]);
+  tp.T.forEach((v,ti)=>{ if(v3len(tp.N[ti])<0.5) return; v.forEach(vi=>{ const L=inc[vi]; if(!L.some(n=>v3dot(n,tp.N[ti])>0.9995)) L.push(tp.N[ti]); }); });
+  const P=tp.V.map((p,vi)=>{
+    const L=inc[vi]; if(!L.length) return p;
+    const A=[1e-3,0,0,0,1e-3,0,0,0,1e-3], b=[0,0,0];
+    L.forEach(n0=>{ const n=n0.map(x=>x*sgn); A[0]+=n[0]*n[0];A[1]+=n[0]*n[1];A[2]+=n[0]*n[2];A[3]+=n[1]*n[0];A[4]+=n[1]*n[1];A[5]+=n[1]*n[2];A[6]+=n[2]*n[0];A[7]+=n[2]*n[1];A[8]+=n[2]*n[2]; b[0]+=t*n[0];b[1]+=t*n[1];b[2]+=t*n[2]; });
+    let d=solve3(A,b)||[0,0,0]; const l=v3len(d); if(l>t*4) d=v3mul(d,t*4/l);
+    return v3sub(p,d);
+  });
+  if(open){ let top=-1e9,bot=1e9; P.forEach(p=>{ top=Math.max(top,p[2]); bot=Math.min(bot,p[2]); });
+    P.forEach(p=>{ if(open==='top'&&p[2]>top-1e-4) p[2]+=t*3; if(open==='bottom'&&p[2]<bot+1e-4) p[2]-=t*3; }); }
+  const out=[]; tp.T.forEach(([a,b,c])=>{ if(sgn>0) out.push(...P[a],...P[b],...P[c]); else out.push(...P[a],...P[c],...P[b]); });
+  return out;
+}
+function shellApply(){
+  const ms=selMeshes(); if(ms.length!==1){ toast('Select one shape first'); return; }
+  const m=ms[0]; if(m.userData.hole){ toast('Holes cannot be shelled'); return; }
+  const t=+$('shl-t').value, open=$('shl-o').value==='none'?null:$('shl-o').value;
+  const sz=worldBox(m).getSize(new THREE.Vector3()), mn=Math.min(sz.x,sz.y,sz.z);
+  if(!(t>=0.2)){ toast('Wall thickness must be at least 0.2 mm'); return; }
+  if(t*2>=mn){ toast('Walls this thick fill the whole shape. Use under '+f1(mn/2)+' mm.'); return; }
+  try{
+    $('shl-go').disabled=true;
+    const tr=worldTriangles(m), inner=shellInner(Array.from(tr),t,open);
+    const arr=CSG.repair(CSG.toTriangles(CSG.subtract(polysOf(m),CSG.fromTriangles(inner))));
+    if(arr.length<9) throw new Error('empty');
+    const pr=replaceWith(m,arr,'Shell','shell');
+    toast('Hollowed out · '+Math.round(pr.geo.attributes.position.count/3).toLocaleString()+' triangles');
+  }catch(err){ console.error(err); toast('Could not shell this shape. Try a simpler one or thinner walls.'); }
+  finally{ $('shl-go').disabled=false; }
+}
+$('shl-go').addEventListener('click',shellApply); $('shl-close').addEventListener('click',()=>togglePanel('shl-panel'));
+
+/* ---------- components: linked groups, edit one and every copy follows ---------- */
+const cmp={sess:null,n:0};
+const M4=a=>new THREE.Matrix4().fromArray(a);
+function compSiblings(id,except){ return st.objs.filter(o=>o.userData.comp===id&&o!==except); }
+function compMake(){
+  const m=selMeshes()[0]; if(!m||st.sel.length!==1){ toast('Select one group or shape first'); return; }
+  if(m.userData.comp){ toast('That is already a component'); return; }
+  m.updateMatrix();
+  if(!m.userData.group){ m.userData.group=[recordOf(m)]; m.userData.gmat=m.matrix.toArray(); }
+  m.userData.comp='cp'+Date.now().toString(36)+(++cmp.n);
+  commit(); updateUI(); renderScene(); toast('Component made. Duplicate it for linked copies, then use Edit component.');
+}
+function compEdit(){
+  const m=selMeshes()[0]; if(!m||!m.userData.comp||st.sel.length!==1){ toast('Select a component first'); return; }
+  if(cmp.sess){ toast('Finish the component you are editing first'); return; }
+  m.updateMatrix(); const gm=M4(m.userData.gmat), De=m.matrix.clone().multiply(gm.clone().invert());
+  const kids=m.userData.group.map(it=>meshFromRecord(it,De.clone().multiply(M4(it.mat)).toArray())).filter(Boolean);
+  const comp=m.userData.comp, name=m.userData.name, color=m.userData.solid, startId=st.nextId, hi0=hi;
+  tc.detach(); removeMesh(m); st.sel=[];
+  commit(); setSelection(kids.map(k=>k.userData.id));
+  cmp.sess={comp,De:De.toArray(),kidIds:kids.map(k=>k.userData.id),startId,name,color,hi0,count:compSiblings(comp).length};
+  $('cmp-t').textContent='Editing component'; $('cmp-s').textContent=cmp.sess.count?cmp.sess.count+' other cop'+(cmp.sess.count>1?'ies':'y')+' will update when you press Done.':'No other copies yet.';
+  $('cmp-panel').hidden=false; updateUI();
+}
+function compMerge(ms){                                      // same merge as Group, returns the new group mesh
+  const solids=ms.filter(m=>!m.userData.hole), holes=ms.filter(m=>m.userData.hole);
+  if(!solids.length) throw new Error('only holes');
+  let acc=polysOf(solids[0]); for(let i=1;i<solids.length;i++) acc=CSG.union(acc,polysOf(solids[i]));
+  if(holes.length){ let h=polysOf(holes[0]); for(let i=1;i<holes.length;i++) h=CSG.union(h,polysOf(holes[i])); acc=CSG.subtract(acc,h); }
+  const arr=CSG.repair(CSG.toTriangles(acc)); if(arr.length<9) throw new Error('empty');
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
+  const pr=prep(g,{gen:true}), kids=ms.map(recordOf);
+  tc.detach(); ms.forEach(removeMesh); st.sel=[];
+  const m=addMesh({name:cmp.sess.name,shape:null,geo:pr.geo,base:pr.base,color:cmp.sess.color});
+  m.position.copy(pr.c); m.userData.group=kids; m.updateMatrix(); m.userData.gmat=m.matrix.toArray();
+  return {m,c:pr.c};
+}
+function compDone(){
+  const S=cmp.sess; if(!S) return;
+  const parts=st.objs.filter(o=>S.kidIds.includes(o.userData.id)||o.userData.id>=S.startId);
+  if(!parts.length){ toast('Nothing left in the component. Use Cancel to go back.'); return; }
+  const sibs=compSiblings(S.comp), Dinv=M4(S.De).invert();
+  const old=sibs.map(o=>{ o.updateMatrix(); return {id:o.userData.id,name:o.userData.name,hidden:o.userData.hidden,locked:o.userData.locked,M:o.matrix.clone(),G:M4(o.userData.gmat)}; });
+  try{
+    const {m,c}=compMerge(parts); m.userData.comp=S.comp;
+    old.forEach(o=>{
+      const Dj=o.M.clone().multiply(o.G.clone().invert());                                    // where that copy sits relative to its original
+      const mat=Dj.multiply(Dinv).multiply(new THREE.Matrix4().makeTranslation(c.x,c.y,c.z)); // same geometry, carried to that copy's place
+      const sib=st.objs.find(x=>x.userData.id===o.id); if(sib) removeMesh(sib);
+      addMesh({id:o.id,name:o.name,shape:null,geo:m.geometry,base:m.userData.base,color:S.color,matrix:mat.toArray(),group:m.userData.group,gmat:m.userData.gmat,comp:S.comp,hidden:o.hidden,locked:o.locked});
+    });
+    cmp.sess=null; $('cmp-panel').hidden=true; commit(); setSelection([m.userData.id]);
+    toast('Component updated'+(old.length?' · '+old.length+' cop'+(old.length>1?'ies':'y')+' followed':''));
+  }catch(err){ console.error(err); toast('Could not merge the parts. Fix overlaps or press Cancel.'); }
+}
+function compCancel(){
+  const S=cmp.sess; if(!S) return; let guard=200; while(hi>S.hi0&&guard-->0) undo();
+  cmp.sess=null; $('cmp-panel').hidden=true; updateUI(); toast('Edit cancelled');
+}
+$('cmp-done').addEventListener('click',compDone); $('cmp-cancel').addEventListener('click',compCancel);
+
+/* ---------- sketch pad: revolve a profile, or extrude a shape from any plane or face ---------- */
+const rev={mode:'revolve',tool:'pen',ops:[],sel:-1,region:[],stash:null,pts:[],start:null,cur:null,drawing:false,last:null,pick:false,plane:null,pend:null};
 const revCv=$('rev-cv'), revCx=revCv.getContext('2d');
-const REV_M=20;                                        // canvas margin in px
+const REV_M=20, REV_K=100;                              // canvas margin in px, Clipper scale
+const revRect=()=>{ const a=REV_M*REV_K,b=(revCv.width-REV_M)*REV_K,c=REV_M*REV_K,d=(revCv.height-REV_M)*REV_K; return [{X:a,Y:c},{X:b,Y:c},{X:b,Y:d},{X:a,Y:d}]; };
+const revPath=pts=>pts.map(p=>({X:Math.round(p[0]*REV_K),Y:Math.round(p[1]*REV_K)}));
+function revBool(subject,clip,type){
+  const C=new ClipperLib.Clipper(), out=new ClipperLib.Paths(), P=ClipperLib.PolyType, F=ClipperLib.PolyFillType;
+  C.AddPaths(subject,P.ptSubject,true); C.AddPaths(clip,P.ptClip,true);
+  C.Execute(type,out,F.pftNonZero,F.pftNonZero); return out;
+}
+const REV_WELD=6;                                          // px: gaps and pinches narrower than twice this get welded shut
+function revClose(paths){                                  // dilate then erode: bridges near-misses between shapes, keeps outer corners sharp
+  if(!paths.length) return paths; const t=REV_WELD*REV_K, out=new ClipperLib.Paths(), out2=new ClipperLib.Paths();
+  const a=new ClipperLib.ClipperOffset(3,2); a.AddPaths(paths,ClipperLib.JoinType.jtMiter,ClipperLib.EndType.etClosedPolygon); a.Execute(out,t);
+  const b=new ClipperLib.ClipperOffset(3,2); b.AddPaths(out,ClipperLib.JoinType.jtMiter,ClipperLib.EndType.etClosedPolygon); b.Execute(out2,-t);
+  return out2;
+}
+const revDisc=(x,y,r,n)=>{ const a=[]; n=n||32; for(let i=0;i<n;i++){ const t=i*2*Math.PI/n; a.push([x+Math.cos(t)*r,y+Math.sin(t)*r]); } return a; };
+const revCirN=r=>4*Math.round(Math.min(360,Math.max(96,r*1.2))/4);
+const revEraseR=()=>({s:8,m:18,l:36}[$('rev-es').value]||18);
+const revSpan=()=>revCv.height-2*REV_M;
+const revExt=()=>rev.mode==='extrude';
+const revOrigin=()=>revExt()?{x:REV_M+revSpan()/2,y:REV_M+revSpan()/2}:{x:REV_M,y:revCv.height-REV_M};
+const revMM=()=>(revExt()?Math.max(2,+$('rev-z').value||64):Math.max(3,+$('rev-h').value||30))/revSpan();   // mm per canvas pixel; the grid is square
+function revStep(){ const v=$('rev-sn').value, c=revSpan()/16; return v==='cell'?c:v==='half'?c/2:v==='quarter'?c/4:0; }
+function revOpPoly(op){
+  if(op.t==='rect') return [[op.l,op.t0],[op.r,op.t0],[op.r,op.b],[op.l,op.b]];
+  if(op.t==='circle') return revDisc(op.cx,op.cy,op.r,revCirN(op.r));
+  return op.pts;
+}
+function revReplay(){
+  const CT=ClipperLib.ClipType; let R=[];
+  rev.ops.forEach(op=>{
+    if(op.k==='add') R=revClose(revBool(R,[revPath(revOpPoly(op))],CT.ctUnion));
+    else R=revBool(R,op.discs.map(d=>revPath(revDisc(d[0],d[1],d[2],24))),CT.ctDifference);
+    R=revBool(R,[revRect()],CT.ctIntersection);
+  });
+  rev.region=R;
+}
+const REV_NEAR=8;                                          // px: how close counts as 'lining up' with an existing edge
+function revLines(){                                       // x and y positions of every existing corner, plus the axis or centre lines
+  const o=revOrigin(), xs=[o.x],ys=revExt()?[o.y]:[]; rev.region.forEach(p=>p.forEach(q=>{ xs.push(q.X/REV_K); ys.push(q.Y/REV_K); })); return {xs,ys};
+}
+function revNearest(v,list,tol){ let best=null,bd=tol; for(const c of list){ const d=Math.abs(c-v); if(d<=bd){ bd=d; best=c; } } return best; }
+function revSnapPt(p){
+  let q=p; const s=revStep(); if(s>0) q=[REV_M+Math.round((p[0]-REV_M)/s)*s,REV_M+Math.round((p[1]-REV_M)/s)*s];
+  if(rev.region.length||revExt()){ const L=revLines(), nx=revNearest(p[0],L.xs,REV_NEAR), ny=revNearest(p[1],L.ys,REV_NEAR); q=[nx===null?q[0]:nx,ny===null?q[1]:ny]; }
+  return q;
+}
+function revChaikin(pts){                                  // corner cutting: rounds hand jitter, keeps both end points fixed
+  let a=pts; for(let it=0;it<3&&a.length>2;it++){ const b=[a[0]]; for(let i=0;i<a.length-1;i++){ const p=a[i],q=a[i+1]; b.push([p[0]*0.75+q[0]*0.25,p[1]*0.75+q[1]*0.25],[p[0]*0.25+q[0]*0.75,p[1]*0.25+q[1]*0.75]); } b.push(a[a.length-1]); a=b; }
+  return a;
+}
+function revAxisPoly(pts){ return [[REV_M,pts[0][1]]].concat(pts,[[REV_M,pts[pts.length-1][1]]]); }
+function revCircleR(a,b){
+  let r=Math.hypot(a[0]-b[0],a[1]-b[1]); const s=revStep(); if(s>0&&r>=2) r=Math.max(s,Math.round(r/s)*s);
+  if((rev.region.length||revExt())&&r>=2){ const L=revLines(), c=[]; L.xs.forEach(X=>{ c.push(Math.abs(X-a[0])); }); L.ys.forEach(Y=>{ c.push(Math.abs(Y-a[1])); }); const n=revNearest(r,c.filter(v=>v>=2),REV_NEAR); if(n!==null) r=n; }
+  return r;
+}
+function revPending(){                                     // the op being dragged out, or null
+  const a=rev.start,b=rev.cur; if(!a||!b) return null;
+  if(rev.tool==='line') return Math.hypot(a[0]-b[0],a[1]-b[1])<2?null:{k:'add',t:'poly',pts:revAxisPoly([a,b])};
+  if(rev.tool==='rect') return Math.abs(a[0]-b[0])<2||Math.abs(a[1]-b[1])<2?null:{k:'add',t:'rect',l:Math.min(a[0],b[0]),r:Math.max(a[0],b[0]),t0:Math.min(a[1],b[1]),b:Math.max(a[1],b[1])};
+  if(rev.tool==='circle'){ const r=revCircleR(a,b); return r<2?null:{k:'add',t:'circle',cx:a[0],cy:a[1],r}; }
+  return null;
+}
 function drawRev(){
-  const W=revCv.width,H=revCv.height, cs=getComputedStyle(document.documentElement);
+  const W=revCv.width,H=revCv.height, o=revOrigin();
   revCx.clearRect(0,0,W,H);
   revCx.strokeStyle='rgba(128,140,150,.35)'; revCx.lineWidth=1;
   for(let i=0;i<=8;i++){ const x=REV_M+(W-2*REV_M)*i/8, y=REV_M+(H-2*REV_M)*i/8; revCx.beginPath(); revCx.moveTo(x,REV_M); revCx.lineTo(x,H-REV_M); revCx.moveTo(REV_M,y); revCx.lineTo(W-REV_M,y); revCx.stroke(); }
-  revCx.strokeStyle='#e0833a'; revCx.lineWidth=3; revCx.beginPath(); revCx.moveTo(REV_M,REV_M); revCx.lineTo(REV_M,H-REV_M); revCx.stroke();
-  if(rev.pts.length){
-    revCx.strokeStyle='#46c1d6'; revCx.lineWidth=4; revCx.lineJoin='round'; revCx.lineCap='round'; revCx.beginPath();
-    rev.pts.forEach((p,i)=>i?revCx.lineTo(p[0],p[1]):revCx.moveTo(p[0],p[1])); revCx.stroke();
-    revCx.fillStyle='rgba(70,193,214,.12)'; revCx.beginPath(); revCx.moveTo(REV_M,rev.pts[0][1]); rev.pts.forEach(p=>revCx.lineTo(p[0],p[1])); revCx.lineTo(REV_M,rev.pts[rev.pts.length-1][1]); revCx.closePath(); revCx.fill();
+  const trace=ps=>{ ps.forEach(p=>{ p.forEach((q,i)=>{ const x=q.X/REV_K,y=q.Y/REV_K; i?revCx.lineTo(x,y):revCx.moveTo(x,y); }); revCx.closePath(); }); };
+  if(rev.region.length){
+    revCx.beginPath(); trace(rev.region); revCx.fillStyle='rgba(70,193,214,.28)'; revCx.fill('evenodd');
+    revCx.strokeStyle='#46c1d6'; revCx.lineWidth=3; revCx.lineJoin='round'; revCx.stroke();
   }
+  const so=rev.ops[rev.sel]; if(so&&so.k==='add'){ revCx.strokeStyle='#ff9f43'; revCx.lineWidth=2; revCx.beginPath(); revOpPoly(so).forEach((p,i)=>i?revCx.lineTo(p[0],p[1]):revCx.moveTo(p[0],p[1])); revCx.closePath(); revCx.stroke(); }
+  revCx.strokeStyle='#e0833a'; revCx.lineWidth=3; revCx.beginPath();
+  if(revExt()){ revCx.moveTo(o.x,REV_M); revCx.lineTo(o.x,H-REV_M); revCx.moveTo(REV_M,o.y); revCx.lineTo(W-REV_M,o.y); } else { revCx.moveTo(REV_M,REV_M); revCx.lineTo(REV_M,H-REV_M); }
+  revCx.stroke();
+  revCx.save(); revCx.setLineDash([6,5]); revCx.lineWidth=2.5; revCx.strokeStyle='#f2c14e'; revCx.lineJoin='round'; revCx.lineCap='round';
+  if(rev.tool==='pen'&&rev.pts.length){ const pp=rev.pts.length>2&&$('rev-ps').checked?revChaikin(rev.pts):rev.pts; revCx.beginPath(); pp.forEach((p,i)=>i?revCx.lineTo(p[0],p[1]):revCx.moveTo(p[0],p[1])); revCx.stroke(); }
+  else if(rev.drawing){ const pd=revPending(); if(pd){ revCx.beginPath(); revOpPoly(pd).forEach((p,i)=>i?revCx.lineTo(p[0],p[1]):revCx.moveTo(p[0],p[1])); revCx.closePath(); revCx.stroke(); } }
+  if(rev.tool==='erase'&&rev.cur&&rev.drawing){ revCx.setLineDash([]); revCx.strokeStyle='#ff6b6b'; revCx.beginPath(); revCx.arc(rev.cur[0],rev.cur[1],revEraseR(),0,Math.PI*2); revCx.stroke(); }
+  revCx.restore();
 }
 function revPt(e){
   const r=revCv.getBoundingClientRect(), sx=revCv.width/r.width, sy=revCv.height/r.height;
   return [Math.max(REV_M,Math.min(revCv.width-REV_M,(e.clientX-r.left)*sx)),Math.max(REV_M,Math.min(revCv.height-REV_M,(e.clientY-r.top)*sy))];
 }
-revCv.addEventListener('pointerdown',e=>{ if(!e.isPrimary) return; if(!rev.drawing) rev.pts=[]; rev.drawing=true; revCv.setPointerCapture(e.pointerId); rev.pts.push(revPt(e)); drawRev(); });
-revCv.addEventListener('pointermove',e=>{ if(!rev.drawing) return; const p=revPt(e), l=rev.pts[rev.pts.length-1]; if(Math.hypot(p[0]-l[0],p[1]-l[1])>3){ rev.pts.push(p); drawRev(); } });
-const revUp=()=>{ rev.drawing=false; };
+function revErase(p){                                      // wipe a disc, filling in between samples so fast strokes leave no gaps
+  const r=revEraseR(), l=rev.last||p, d=Math.hypot(p[0]-l[0],p[1]-l[1]), n=Math.max(1,Math.ceil(d/(r*0.25))), op=rev.ops[rev.ops.length-1], paths=[];
+  for(let i=1;i<=n;i++){ const x=l[0]+(p[0]-l[0])*i/n, y=l[1]+(p[1]-l[1])*i/n; op.discs.push([x,y,r]); paths.push(revPath(revDisc(x,y,r,24))); }
+  rev.region=revBool(rev.region,paths,ClipperLib.ClipType.ctDifference); rev.last=p;
+}
+function revPick(p){                                       // topmost added shape under the point
+  const pt={X:Math.round(p[0]*REV_K),Y:Math.round(p[1]*REV_K)};
+  for(let i=rev.ops.length-1;i>=0;i--){ const op=rev.ops[i]; if(op.k==='add'&&ClipperLib.Clipper.PointInPolygon(pt,revPath(revOpPoly(op)))!==0) return i; }
+  return -1;
+}
+function revAddOp(op){ rev.ops.push(op); rev.sel=rev.ops.length-1; rev.stash=null; revChanged(); }
+function revChanged(){ revReplay(); drawRev(); revDimUI(); skUpdate(); }
+revCv.addEventListener('pointerdown',e=>{
+  if(!e.isPrimary) return; revCv.setPointerCapture(e.pointerId); rev.drawing=true; const raw=revPt(e);
+  if(rev.tool==='pen'){ rev.pts=[raw]; }
+  else if(rev.tool==='erase'){ rev.ops.push({k:'erase',discs:[]}); rev.last=null; rev.cur=raw; revErase(raw); }
+  else if(rev.tool==='select'){ rev.start=raw; }
+  else { rev.start=revSnapPt(raw); rev.cur=rev.start; }
+  drawRev();
+});
+revCv.addEventListener('pointermove',e=>{
+  if(!rev.drawing) return; const raw=revPt(e);
+  if(rev.tool==='pen'){ const l=rev.pts[rev.pts.length-1]; if(Math.hypot(raw[0]-l[0],raw[1]-l[1])>2){ rev.pts.push(raw); drawRev(); } }
+  else if(rev.tool==='erase'){ rev.cur=raw; revErase(raw); drawRev(); }
+  else if(rev.tool==='select'){ rev.cur=raw; }
+  else { rev.cur=revSnapPt(raw); drawRev(); }
+});
+const revUp=e=>{
+  if(!rev.drawing) return; rev.drawing=false; const ok=e&&e.type==='pointerup';
+  if(rev.tool==='pen'){
+    if(rev.pts.length>=3){ const sm=$('rev-ps').checked?revChaikin(rev.pts):rev.pts; revAddOp({k:'add',t:'poly',pts:revExt()?sm:revAxisPoly(sm)}); }
+    rev.pts=[]; drawRev();
+  }else if(rev.tool==='erase'){ const op=rev.ops[rev.ops.length-1]; rev.last=null; rev.cur=null; if(!op.discs.length) rev.ops.pop(); else { rev.sel=-1; revChanged(); } }
+  else if(rev.tool==='select'){ if(ok&&rev.start){ rev.sel=revPick(rev.start); revDimUI(); } rev.start=null; rev.cur=null; drawRev(); }
+  else{ const pd=ok?revPending():null; rev.start=null; rev.cur=null; if(pd) revAddOp(pd); else drawRev(); }
+};
 revCv.addEventListener('pointerup',revUp); revCv.addEventListener('pointercancel',revUp);
-$('rev-clear').addEventListener('click',()=>{ rev.pts=[]; drawRev(); });
+
+/* numbers for the selected shape: size and position in mm, plus a few simple constraints */
+const revFmt=v=>String(Math.round(v*100)/100);
+function revDimUI(){
+  const box=$('rev-dim'), op=rev.ops[rev.sel];
+  if(!op||op.k!=='add'){ box.hidden=true; box.innerHTML=''; return; }
+  const o=revOrigin(), mm=revMM(), fld=(f,l,v)=>'<label>'+l+' <input type="number" data-f="'+f+'" value="'+revFmt(v)+'" step="0.1" inputmode="decimal"></label>';
+  let h='';
+  if(op.t==='rect') h=fld('l','Left (mm)',(op.l-o.x)*mm)+fld('b','Bottom (mm)',(o.y-op.b)*mm)+fld('w','Width',(op.r-op.l)*mm)+fld('h','Height',(op.b-op.t0)*mm);
+  else if(op.t==='circle') h=fld('cx','Centre X (mm)',(op.cx-o.x)*mm)+fld('cy','Centre Y (mm)',(o.y-op.cy)*mm)+fld('d','Diameter',op.r*2*mm);
+  else h='<small style="grid-column:1/-1">Freehand shapes have no numbers. Delete it or draw it again as a rectangle or circle.</small>';
+  h+='<span class="row" style="grid-column:1/-1;flex-wrap:wrap">'+(op.t!=='poly'?'<button type="button" class="btn sm" data-a="same">Match previous</button><button type="button" class="btn sm" data-a="mid">'+(revExt()?'Centre':'On axis')+'</button>':'')+'<button type="button" class="btn sm" data-a="del">Delete</button></span>';
+  box.innerHTML=h; box.hidden=false;
+}
+$('rev-dim').addEventListener('change',e=>{
+  const f=e.target.dataset&&e.target.dataset.f, op=rev.ops[rev.sel]; if(!f||!op) return;
+  const v=parseFloat(e.target.value); if(!Number.isFinite(v)) return; const o=revOrigin(), mm=revMM(), px=v/mm;
+  if(op.t==='rect'){ const w=op.r-op.l, h=op.b-op.t0;
+    if(f==='l'){ op.l=o.x+px; op.r=op.l+w; } else if(f==='b'){ op.b=o.y-px; op.t0=op.b-h; }
+    else if(f==='w'&&px>1){ op.r=op.l+px; } else if(f==='h'&&px>1){ op.t0=op.b-px; } }
+  else if(op.t==='circle'){ if(f==='cx') op.cx=o.x+px; else if(f==='cy') op.cy=o.y-px; else if(f==='d'&&px>2) op.r=px/2; }
+  revChanged();
+});
+$('rev-dim').addEventListener('click',e=>{
+  const a=e.target.dataset&&e.target.dataset.a, op=rev.ops[rev.sel]; if(!a||!op) return; const o=revOrigin();
+  if(a==='del'){ rev.ops.splice(rev.sel,1); rev.sel=-1; }
+  else if(a==='mid'){ if(op.t==='rect'){ const w=op.r-op.l; op.l=revExt()?o.x-w/2:o.x; op.r=op.l+w; } else op.cx=o.x; }
+  else if(a==='same'){ let prev=null; for(let i=rev.sel-1;i>=0;i--){ if(rev.ops[i].k==='add'&&rev.ops[i].t===op.t){ prev=rev.ops[i]; break; } }
+    if(!prev){ toast('No earlier '+op.t+' to copy'); return; }
+    if(op.t==='rect'){ op.r=op.l+(prev.r-prev.l); op.t0=op.b-(prev.b-prev.t0); } else op.r=prev.r; }
+  revChanged();
+});
+function revTool(t){
+  if(revExt()&&t==='line') t='pen'; rev.tool=t;
+  document.querySelectorAll('#rev-tools [data-t]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===t)));
+  $('rev-es-l').hidden=t!=='erase'; $('rev-ps-l').hidden=t!=='pen'; $('rev-sn-l').hidden=t==='pen'||t==='erase'||t==='select';
+}
+document.querySelectorAll('#rev-tools [data-t]').forEach(b=>b.addEventListener('click',()=>revTool(b.dataset.t)));
+function revMode(m){
+  rev.mode=m; rev.pick=false;
+  document.querySelectorAll('#rev-modes [data-m]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+  document.querySelectorAll('.rm-r').forEach(el=>{ el.hidden=m!=='revolve'; }); document.querySelectorAll('.rm-e').forEach(el=>{ el.hidden=m!=='extrude'; });
+  document.querySelector('#rev-tools [data-t=line]').hidden=m==='extrude';
+  $('rev-go').textContent=m==='extrude'?'Extrude':'Revolve'; $('rev-ttl').textContent=m==='extrude'?'Sketch and extrude':'Sketch and revolve';
+  $('rev-help').textContent=m==='extrude'?'Draw a shape on the plane, then give it a depth. Origin is the orange cross. Tap Select, then a shape, to type exact sizes.':'Sketch one side of the shape. The orange left edge is the middle: whatever you draw is spun around it, and anything crossing it is cut off. Pen and Line fill in towards the middle. Shapes add together, and the eraser cuts them away.';
+  revTool(rev.tool); revChanged(); skUpdate();
+}
+document.querySelectorAll('#rev-modes [data-m]').forEach(b=>b.addEventListener('click',()=>revMode(b.dataset.m)));
+$('rev-clear').addEventListener('click',()=>{ if(rev.ops.length){ rev.stash=rev.ops.slice(); rev.ops=[]; rev.sel=-1; revChanged(); } });
+$('rev-undo').addEventListener('click',()=>{ if(rev.ops.length){ rev.ops.pop(); rev.sel=-1; revChanged(); } else if(rev.stash){ rev.ops=rev.stash; rev.stash=null; revChanged(); } else toast('Nothing to undo'); });
 $('rev-close').addEventListener('click',()=>togglePanel('rev-panel'));
-$('rev-go').addEventListener('click',()=>{
-  if(rev.pts.length<3){ toast('Draw an outline first'); return; }
-  const Hmm=Math.max(3,+$('rev-h').value||30), seg=+$('rev-seg').value||64;
+['rev-h','rev-z'].forEach(id=>$(id).addEventListener('change',()=>{ revDimUI(); skUpdate(); }));
+$('rev-sn').addEventListener('change',()=>{});
+
+/* ---------- the plane a shape is extruded from ---------- */
+const sk={frame:null,ghost:null};
+function skBasis(n){
+  if(Math.abs(n[2])>0.999) return {u:[1,0,0],v:[0,n[2]>0?1:-1,0],n};
+  const up=[0,0,1], d=v3dot(up,n), v=v3unit(v3sub(up,v3mul(n,d))), u=v3cross(v,n); return {u,v,n};
+}
+function skPlane(){
+  if(rev.plane) return rev.plane;
+  const k=$('rev-pl').value, off=+$('rev-po').value||0;
+  if(k==='xy') return Object.assign(skBasis([0,0,1]),{o:[0,0,off],target:null});
+  if(k==='xz') return {u:[1,0,0],v:[0,0,1],n:[0,-1,0],o:[0,-off,0],target:null};
+  return {u:[0,1,0],v:[0,0,1],n:[1,0,0],o:[off,0,0],target:null};
+}
+const skMat=P=>new THREE.Matrix4().makeBasis(new THREE.Vector3(...P.u),new THREE.Vector3(...P.v),new THREE.Vector3(...P.n)).setPosition(new THREE.Vector3(...P.o));
+function skClear(){ ['frame','ghost'].forEach(k=>{ const o=sk[k]; if(o){ scene.remove(o); o.geometry.dispose(); o.material.dispose(); sk[k]=null; } }); requestRender(); }
+function skShapes(){                                       // sketch region as three.js shapes, in mm on the plane
+  const mm=revMM(), o=revOrigin(), outers=[], holes=[];
+  rev.region.forEach(p=>{ const pts=p.map(q=>new THREE.Vector2((q.X/REV_K-o.x)*mm,(o.y-q.Y/REV_K)*mm)); (ClipperLib.Clipper.Orientation(p)?outers:holes).push({pts,p}); });
+  const shapes=outers.map(O=>new THREE.Shape(O.pts));
+  holes.forEach(H=>{ const k=outers.findIndex(O=>ClipperLib.Clipper.PointInPolygon(H.p[0],O.p)!==0); if(k>=0) shapes[k].holes.push(new THREE.Path(H.pts)); });
+  return shapes;
+}
+function skGeometry(forPreview){
+  const shapes=skShapes(); if(!shapes.length) return null;
+  const D=Math.max(0.1,+$('rev-d').value||5), cut=$('rev-cm').value==='cut', merge=!!(skPlane().target!==null&&$('rev-mg').checked);
+  const lo=cut?-D:(merge?-0.2:0), hi=cut?0.2:D;                 // overlap a little into the part so the merge is clean
+  const g=new THREE.ExtrudeGeometry(shapes,{depth:hi-lo,bevelEnabled:false,curveSegments:1,steps:1}); g.translate(0,0,lo);
+  g.applyMatrix4(skMat(skPlane())); return g;
+}
+function skUpdate(){
+  const show=!$('rev-panel').hidden&&revExt(); if(!show){ skClear(); return; }
+  const P=skPlane(), s=Math.max(2,+$('rev-z').value||64)/2, pts=[[-s,-s],[s,-s],[s,s],[-s,s]].map(([a,b])=>[P.o[0]+P.u[0]*a+P.v[0]*b,P.o[1]+P.u[1]*a+P.v[1]*b,P.o[2]+P.u[2]*a+P.v[2]*b]);
+  if(sk.frame){ scene.remove(sk.frame); sk.frame.geometry.dispose(); sk.frame.material.dispose(); }
+  const fg=new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(pts.flat(),3));
+  sk.frame=new THREE.LineLoop(fg,new THREE.LineBasicMaterial({color:css('--accent'),depthTest:false,transparent:true,opacity:0.8})); sk.frame.renderOrder=25; sk.frame.raycast=()=>{}; scene.add(sk.frame);
+  if(sk.ghost){ scene.remove(sk.ghost); sk.ghost.geometry.dispose(); sk.ghost.material.dispose(); sk.ghost=null; }
+  try{ const g=skGeometry(true); if(g){ sk.ghost=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:$('rev-cm').value==='cut'?0xff6b6b:0x46c1d6,transparent:true,opacity:0.45,depthWrite:false,side:THREE.DoubleSide})); sk.ghost.renderOrder=24; sk.ghost.raycast=()=>{}; scene.add(sk.ghost); } }catch(e){}
+  $('rev-pls').textContent=rev.plane?rev.plane.label:'';
+  requestRender();
+}
+['rev-pl','rev-po','rev-z','rev-d','rev-cm','rev-mg'].forEach(id=>$(id).addEventListener('change',()=>{ if(id==='rev-pl'||id==='rev-po') rev.plane=null; revChanged(); }));
+$('rev-pk').addEventListener('click',()=>{ rev.pick=!rev.pick; $('rev-pk').setAttribute('aria-pressed',String(rev.pick)); if(rev.pick) toast('Tap a flat face on a shape'); updateUI(); });
+function skPickTap(e){
+  const r=dom.getBoundingClientRect();
+  ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(st.objs.filter(m=>m.visible&&!m.userData.hole),false); if(!hits.length) return;
+  const h=hits[0], tp=topoOf(h.object).tp, reg=faceRegion(tp,h.faceIndex);
+  if(!reg){ toast('Tap a flat face'); return; }
+  const n=tp.N[h.faceIndex], pts=new Set(); reg.tris.forEach(t=>tp.T[t].forEach(vi=>pts.add(vi)));
+  let c=[0,0,0]; pts.forEach(vi=>{ c=v3add(c,tp.V[vi]); }); c=v3mul(c,1/pts.size);
+  rev.plane=Object.assign(skBasis(n),{o:c,target:h.object.userData.id,label:'Face of '+h.object.userData.name});
+  rev.pick=false; $('rev-pk').setAttribute('aria-pressed','false'); $('rev-mg').checked=true; revChanged(); updateUI(); toast('Sketching on that face');
+}
+function extrudeApply(){
+  const g=skGeometry(false); if(!g){ toast('Sketch a shape first'); return; }
+  const P=skPlane(), cut=$('rev-cm').value==='cut', tgt=P.target!==null?st.objs.find(o=>o.userData.id===P.target):null, merge=!!(tgt&&$('rev-mg').checked);
+  try{
+    const arr=Array.from(g.toNonIndexed().attributes.position.array);
+    if(merge){
+      const res=cut?CSG.subtract(polysOf(tgt),CSG.fromTriangles(arr)):CSG.union(polysOf(tgt),CSG.fromTriangles(arr));
+      const out=CSG.repair(CSG.toTriangles(res)); if(out.length<9) throw new Error('empty');
+      const pr=replaceWith(tgt,out,cut?'Cut':'Extruded',cut?'cutx':'extrude');
+      toast((cut?'Cut into the part':'Extruded onto the part')+' · '+Math.round(pr.geo.attributes.position.count/3).toLocaleString()+' triangles');
+    }else{
+      const gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
+      const pr=prep(gg,{gen:true}); st.counts.ext=(st.counts.ext||0)+1;
+      const m=addMesh({name:(cut?'Cutter ':'Extrude ')+st.counts.ext,shape:null,geo:pr.geo,base:pr.base,color:DEFAULT_COLOR,hole:cut});
+      m.position.copy(pr.c); commit(); setSelection([m.userData.id]);
+      toast(cut?'Made a cutter. Group it with the part to cut.':'Extruded · '+Math.round(pr.geo.attributes.position.count/3).toLocaleString()+' triangles');
+    }
+    togglePanel('rev-panel');
+  }catch(err){ console.error(err); toast('Could not extrude that. Try a simpler sketch.'); }
+}
+
+function revSolid(ring,seg){                              // ring: CCW [{x,y}] in mm with y up. Returns flat triangle array
+  const prof=ring.concat([ring[0]]).map(p=>new THREE.Vector2(Math.max(0,p.x),p.y));
+  const g=new THREE.LatheGeometry(prof,seg).rotateX(Math.PI/2).toNonIndexed(), a=g.attributes.position.array, out=[]; let vol=0;
+  for(let i=0;i<a.length;i+=9){
+    const ux=a[i+3]-a[i],uy=a[i+4]-a[i+1],uz=a[i+5]-a[i+2],vx=a[i+6]-a[i],vy=a[i+7]-a[i+1],vz=a[i+8]-a[i+2];
+    const cx=uy*vz-uz*vy,cy=uz*vx-ux*vz,cz=ux*vy-uy*vx; if(Math.hypot(cx,cy,cz)<2e-9) continue;
+    for(let k=0;k<9;k++) out.push(a[i+k]);
+    vol+=(a[i]*(a[i+4]*a[i+8]-a[i+5]*a[i+7])-a[i+1]*(a[i+3]*a[i+8]-a[i+5]*a[i+6])+a[i+2]*(a[i+3]*a[i+7]-a[i+4]*a[i+6]))/6; }
+  if(vol<0) for(let i=0;i<out.length;i+=9){ for(let k=0;k<3;k++){ const t=out[i+3+k]; out[i+3+k]=out[i+6+k]; out[i+6+k]=t; } }
+  g.dispose(); return out;
+}
+function revBuild(Hmm,seg){
+  const hasHole=rev.region.some(p=>!ClipperLib.Clipper.Orientation(p)), tolMul=hasHole?4:1;      // closed holes need a boolean cut, which gets slow on fine meshes
+  if(hasHole) seg=Math.min(seg,48);
   const span=revCv.height-2*REV_M, mm=Hmm/span;                      // the grid is square, so height and radius share one scale
-  let pts=rev.pts.map(p=>({x:(p[0]-REV_M)*mm,y:(revCv.height-REV_M-p[1])*mm}));
-  const simp=(a,tol)=>{ if(a.length<3) return a; const keep=new Uint8Array(a.length); keep[0]=keep[a.length-1]=1; const st2=[[0,a.length-1]];
+  const simp=(a,tol)=>{ if(a.length<4) return a; const keep=new Uint8Array(a.length); keep[0]=keep[a.length-1]=1; const st2=[[0,a.length-1]];
     while(st2.length){ const [i,j]=st2.pop(), A=a[i],B=a[j],dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1e-9; let m=0,mi=-1;
       for(let k=i+1;k<j;k++){ const d=Math.abs((a[k].x-A.x)*dy-(a[k].y-A.y)*dx)/L; if(d>m){m=d;mi=k;} }
       if(mi>=0&&m>tol){ keep[mi]=1; st2.push([i,mi],[mi,j]); } }
     return a.filter((_,i)=>keep[i]); };
-  pts=simp(pts,Hmm*0.006);
-  const prof=[new THREE.Vector2(0,pts[0].y)].concat(pts.map(p=>new THREE.Vector2(Math.max(0,p.x),p.y)),[new THREE.Vector2(0,pts[pts.length-1].y)]);
+  const solids=[],holes=[];
+  rev.region.forEach(path=>{
+    const isOuter=ClipperLib.Clipper.Orientation(path);
+    let ring=path.map(q=>({x:(q.X/REV_K-REV_M)*mm,y:(revCv.height-REV_M-q.Y/REV_K)*mm}));
+    let area=0; for(let i=0;i<ring.length;i++){ const a=ring[i],b=ring[(i+1)%ring.length]; area+=a.x*b.y-b.x*a.y; } if(area<0) ring.reverse();
+    { const h=ring.length>>1, tol=Hmm*tolMul*(+$('rev-seg').selectedOptions[0].dataset.t||0.004), c1=simp(ring.slice(0,h+1),tol), c2=simp(ring.slice(h).concat([ring[0]]),tol); ring=c1.slice(0,-1).concat(c2.slice(0,-1)); } if(ring.length<3) return;
+    const tri=revSolid(ring,seg); if(tri.length) (isOuter?solids:holes).push(tri);
+  });
+  if(!solids.length) return null;
+  if(solids.length===1&&!holes.length) return solids[0];
+  let acc=CSG.fromTriangles(solids[0]); for(let i=1;i<solids.length;i++) acc=CSG.union(acc,CSG.fromTriangles(solids[i]));
+  holes.forEach(h=>{ acc=CSG.subtract(acc,CSG.fromTriangles(h)); });
+  return CSG.repair(CSG.toTriangles(acc));
+}
+$('rev-go').addEventListener('click',()=>{
+  if(revExt()){ extrudeApply(); return; }
+  if(!rev.region.length){ toast('Sketch a shape first'); return; }
+  const Hmm=Math.max(3,+$('rev-h').value||30), seg=+$('rev-seg').value||64;
   try{
-    const g=new THREE.LatheGeometry(prof,seg).rotateX(Math.PI/2);
+    const arr=revBuild(Hmm,seg); if(!arr||arr.length<9) throw new Error('empty');
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
     const pr=prep(g,{gen:true});
     if(![pr.base.x,pr.base.y,pr.base.z].every(Number.isFinite)||pr.base.x<0.05) throw new Error('bad');
     st.counts.rev=(st.counts.rev||0)+1;
@@ -3015,8 +3709,9 @@ $('rev-go').addEventListener('click',()=>{
     commit(); setSelection([m.userData.id]);
     togglePanel('rev-panel');
     toast('Revolved · '+Math.round(pr.geo.attributes.position.count/3).toLocaleString()+' triangles');
-  }catch(err){ toast('Could not revolve that outline. Try a simpler one.'); }
+  }catch(err){ console.error(err); toast('Could not revolve that sketch. Try a simpler one.'); }
 });
+revMode('revolve');
 
 /* ---------- ungroup, scene list, projects, more export formats ---------- */
 function ungroup(){
@@ -3043,7 +3738,7 @@ function renderScene(){
     return '<div class="srow'+(on?' on':'')+(u.hidden?' off':'')+'" role="listitem" data-id="'+u.id+'">'
       +scnBtn('eye',u.hidden?ICON.eyeoff:ICON.eye,u.hidden?'Show':'Hide',String(!u.hidden))
       +scnBtn('lk',u.locked?ICON.lock:ICON.unlock,u.locked?'Unlock':'Lock',String(!!u.locked))
-      +'<button type="button" class="nm">'+escHtml(u.name)+(u.hole?'<span class="tag">hole</span>':'')+(u.group?'<span class="tag">group</span>':'')+'</button>'
+      +'<button type="button" class="nm">'+escHtml(u.name)+(u.hole?'<span class="tag">hole</span>':'')+(u.group?'<span class="tag">'+(u.comp?'linked':'group')+'</span>':'')+'</button>'
       +scnBtn('rm',ICON.trash,'Delete')+'</div>';
   }).join(''):'<div style="padding:6px 8px;color:var(--fg-2)">Nothing here yet.</div>';
 }
