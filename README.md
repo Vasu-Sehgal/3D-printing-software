@@ -15,6 +15,11 @@ Open `tinkerbench.html` in a browser. It needs internet for the Three.js and Cli
 - **Export:** STL, 3MF, OBJ.
 - **Slicer:** walls, top/bottom skins, lines or grid infill, automatic supports (bed-only or everywhere), spiral vase mode, print-failure check, skirt or brim, retraction, fan, layer preview, G-code download, optional Moonraker upload.
 
+## Dense meshes
+- **Booleans are local.** Group, hole, intersect, hollow, shell, push/pull and split only work on the area where shapes overlap, so grouping a dome into a 100k to 400k triangle STL takes a few seconds and doesn't bloat the mesh. Results are checked for open edges and retried with different tolerances if needed.
+- **Simplify tool** reduces triangle count (quadric edge collapse). If a boolean says the mesh is too dense, simplify it first. Split by plane is still slow on very dense meshes, and several overlapping holes in a 400k mesh can still be slow or leave open edges.
+- **Large projects** autosave to IndexedDB instead of `localStorage`.
+
 ## Slicer limits
 - Supports are plain columns: no tree supports and no support blockers.
 - Features thinner than about two line widths are not handled properly.
@@ -22,4 +27,4 @@ Open `tinkerbench.html` in a browser. It needs internet for the Three.js and Cli
 - Tested in headless Chromium and node, not on a real printer yet. Watch the first print.
 
 ## Storage
-Autosaves to `localStorage` in the browser. Use the save icon to download a project file, or Projects to keep named copies in the browser.
+Autosaves in the browser (`localStorage`, or IndexedDB for large projects). Use the save icon to download a project file, or Projects to keep named copies in the browser.
