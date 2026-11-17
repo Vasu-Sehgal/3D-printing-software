@@ -88,6 +88,7 @@ button{touch-action:manipulation}
 .modal .card .btn.danger{border-color:var(--warn); color:var(--warn)}
 #sl-panel input[type=checkbox],#arr-panel input[type=checkbox]{width:18px; height:18px; padding:0; vertical-align:middle}
 #sl-panel{max-height:calc(100% - 52px); overflow-y:auto; width:min(340px,calc(100% - 80px))}
+#sl-panel .slsec{border-top:1px solid var(--line)} #sl-panel .slgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:4px 0 10px} #sl-panel .slgrid .wide{grid-column:1/-1} #sl-form.simple [data-adv]{display:none} #sl-panel .slpre{display:grid; grid-template-columns:1fr; gap:6px; padding-bottom:6px} #sl-pre-n{flex:2.2}
 #sl-panel textarea{width:100%; font:11px/1.35 ui-monospace,monospace; background:var(--panel-2); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:6px; resize:vertical}
 #sl-panel details{grid-column:1/-1} #sl-panel summary{cursor:pointer; padding:6px 0; color:var(--fg)} #sl-panel #sl-sum,#sl-sum2{line-height:1.5; color:var(--fg)}
 .ck{display:flex; gap:6px; margin-top:4px; font-size:12px; line-height:1.4}
@@ -97,6 +98,7 @@ button{touch-action:manipulation}
 .slbar{position:absolute; left:50%; bottom:46px; transform:translateX(-50%); z-index:16; display:flex; flex-direction:column; gap:6px; align-items:stretch; width:min(420px,calc(100% - 24px)); padding:8px 10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; font-size:12px}
 .slbar[hidden]{display:none}
 .slbar input[type=range]{width:100%; height:32px}
+#sl-leg{display:flex; flex-wrap:wrap; gap:2px 10px; font-size:11px; color:var(--fg-2)} #sl-leg i{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px; vertical-align:-1px}
 .slbar .row{display:flex; gap:6px} .slbar .row .btn{flex:1; justify-content:center}
 .tool b,.tool small,.tool .wide,.tool .row{grid-column:1/-1}
 .tool small{color:var(--fg-2)}
@@ -280,9 +282,10 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
     <div class="slbar" id="sl-bar" hidden>
       <div id="sl-sum2"></div>
       <span id="sl-lt"></span>
+      <div id="sl-leg"></div>
       <input type="range" id="sl-ly" min="1" max="1" value="1" aria-label="Layer">
       <span class="row"><button type="button" class="btn sm primary" id="sl-dl2">Download G-code</button><button type="button" class="btn sm" id="sl-set">Settings</button></span>
-      <span class="row"><button type="button" class="btn sm" id="sl-showm">Show model</button><button type="button" class="btn sm" id="sl-clear">Clear preview</button></span>
+      <span class="row"><button type="button" class="btn sm" id="sl-showm">Show model</button><button type="button" class="btn sm" id="sl-ccb">Colour change here</button><button type="button" class="btn sm" id="sl-clear">Clear preview</button></span>
     </div>
     <div class="plates" id="plates"><div id="pl-tabs" role="tablist"></div><button type="button" class="btn sm" id="pl-add" title="Add plate" aria-label="Add plate">+</button></div>
     <div class="tool plmenu" id="pl-menu" hidden>
@@ -391,35 +394,17 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
     <div class="tool" id="sl-panel" hidden>
       <b>Slice for print (Sovol SV06, Klipper)</b>
       <small class="wide" id="sl-plate"></small>
-      <label>Layer height <select id="sl-lh"><option>0.1</option><option>0.12</option><option>0.16</option><option selected>0.2</option><option>0.24</option><option>0.28</option></select></label>
-      <label>First layer <input type="number" id="sl-fh" value="0.2" min="0.1" max="0.4" step="0.05" inputmode="decimal"></label>
-      <label>Line width <input type="number" id="sl-lw" value="0.45" min="0.3" max="0.8" step="0.05" inputmode="decimal"></label>
-      <label>Walls <input type="number" id="sl-wl" value="2" min="1" max="8" step="1" inputmode="numeric"></label>
-      <label>Top layers <input type="number" id="sl-tp" value="5" min="1" max="20" step="1" inputmode="numeric"></label>
-      <label>Bottom layers <input type="number" id="sl-bt" value="4" min="1" max="20" step="1" inputmode="numeric"></label>
-      <label>Infill % <input type="number" id="sl-if" value="15" min="0" max="100" step="5" inputmode="numeric"></label>
-      <label>Infill pattern <select id="sl-ip"><option value="lines">Lines</option><option value="grid">Grid</option></select></label>
-      <label>Nozzle °C <input type="number" id="sl-nz" value="205" min="150" max="300" step="5" inputmode="numeric"></label>
-      <label>Bed °C <input type="number" id="sl-bd" value="60" min="0" max="120" step="5" inputmode="numeric"></label>
-      <label>Outer wall mm/s <input type="number" id="sl-vo" value="35" min="5" max="200" step="5" inputmode="numeric"></label>
-      <label>Inner wall mm/s <input type="number" id="sl-vi" value="55" min="5" max="300" step="5" inputmode="numeric"></label>
-      <label>Infill mm/s <input type="number" id="sl-vf" value="70" min="5" max="300" step="5" inputmode="numeric"></label>
-      <label>Travel mm/s <input type="number" id="sl-vt" value="120" min="20" max="500" step="10" inputmode="numeric"></label>
-      <label>Fan % <input type="number" id="sl-fn" value="100" min="0" max="100" step="5" inputmode="numeric"></label>
-      <label>Retraction mm <input type="number" id="sl-rt" value="0.8" min="0" max="6" step="0.1" inputmode="decimal"></label>
-      <label class="wide">Brim width mm (0 = skirt only) <input type="number" id="sl-br" value="0" min="0" max="20" step="1" inputmode="numeric"></label>
-      <label class="wide">Supports <select id="sl-su"><option value="off">Off</option><option value="plate">Touching bed only</option><option value="all">Everywhere</option></select></label>
-      <label>Support density % <input type="number" id="sl-sd" value="15" min="5" max="50" step="5" inputmode="numeric"></label>
-      <label>Overhang angle ° <input type="number" id="sl-sa" value="45" min="20" max="80" step="5" inputmode="numeric"></label>
-      <small class="wide">Supports are generated for overhangs steeper than the angle. A gap is left above and below the model so they snap off. Touching bed only skips anything that would rest on the model itself.</small>
-      <label class="wide row-check"><span><input type="checkbox" id="sl-vs"> Spiral vase mode</span></label>
-      <small class="wide" id="sl-vs-h" hidden>One continuous wall that spirals up, with a solid base (the Bottom layers setting) and an open top. Walls, infill and top layers are ignored, and only the largest outline is printed. A wider line width (0.6 to 0.8) makes a sturdier wall.</small>
-      <label class="wide row-check"><span><input type="checkbox" id="sl-kl" checked> Report layers to Klipper (SET_PRINT_STATS_INFO)</span></label>
+      <div class="wide slpre">
+        <label class="wide">Preset <select id="sl-pre"></select></label>
+        <span class="row"><input type="text" id="sl-pre-n" placeholder="Name to save as" autocomplete="off" maxlength="40"><button type="button" class="btn sm" id="sl-pre-s">Save</button><button type="button" class="btn sm" id="sl-pre-d">Delete</button></span>
+        <label class="wide row-check"><span><input type="checkbox" id="sl-adv"> Show all settings</span></label>
+      </div>
+      <div class="wide" id="sl-form"></div>
       <details class="wide"><summary>Start and end G-code</summary>
         <label>Start<textarea id="sl-st-g" rows="8" spellcheck="false"></textarea></label>
         <label>End<textarea id="sl-en-g" rows="6" spellcheck="false"></textarea></label>
       </details>
-      <small>No supports yet, so avoid overhangs steeper than about 45°. Thin gaps under one line width are skipped.</small>
+      <small class="wide">Klipper keeps the last acceleration and pressure advance it was given until it restarts, so set your usual values in your start macro if you change them here.</small>
       <div class="wide" id="sl-sum"></div>
       <span class="row"><button type="button" class="btn sm primary" id="sl-go">Slice</button><button type="button" class="btn sm primary" id="sl-dl" disabled>Download G-code</button></span>
       <details class="wide" id="sl-net"><summary>Send to printer (Moonraker)</summary>
@@ -2632,6 +2617,101 @@ $('ed-go').addEventListener('click',edgeApply); $('ed-close').addEventListener('
 
 /* ---------- slicer: layers -> walls, skins, infill -> Klipper-friendly G-code ---------- */
 const SLC_S=1000;
+/* ---------- slicer settings schema (drives the panel, presets and the config object) ----------
+   k = field id suffix (#sl-<k>), c = name in the config object, b = shown in the simple view */
+const SLF=[
+ {g:'Layers and walls',open:true,f:[
+  {k:'lh',c:'layerH',t:'sel',num:1,l:'Layer height',o:['0.08','0.1','0.12','0.16','0.2','0.24','0.28','0.32'],d:'0.2',b:1},
+  {k:'fh',c:'firstH',l:'First layer',d:0.2,lo:0.1,hi:0.4,st:0.05},
+  {k:'lw',c:'w',l:'Line width',d:0.45,lo:0.3,hi:0.8,st:0.05},
+  {k:'wl',c:'walls',l:'Walls',d:2,lo:1,hi:8,st:1,int:1,b:1},
+  {k:'tp',c:'topLayers',l:'Top layers',d:5,lo:1,hi:20,st:1,int:1,b:1},
+  {k:'bt',c:'botLayers',l:'Bottom layers',d:4,lo:1,hi:20,st:1,int:1,b:1},
+  {k:'sm',c:'seam',t:'sel',l:'Seam position',o:[['aligned','Aligned, in corners'],['nearest','Nearest'],['rear','Rear'],['random','Random']],d:'aligned',b:1,w:1},
+  {k:'gf',c:'gapFill',t:'chk',l:'Fill thin gaps and thin walls',d:1,h:'Features thinner than the wall stack get a single centre line instead of being skipped.'},
+  {k:'ef',c:'efoot',l:'Elephant foot mm',d:0,lo:0,hi:0.6,st:0.05},
+  {k:'xy',c:'xyComp',l:'XY size comp mm',d:0,lo:-0.5,hi:0.5,st:0.05},
+ ]},
+ {g:'Infill',open:true,f:[
+  {k:'if',c:'infill',l:'Infill %',d:15,lo:0,hi:100,st:5,int:1,b:1},
+  {k:'ip',c:'pattern',t:'sel',l:'Infill pattern',o:[['lines','Lines'],['grid','Grid'],['triangles','Triangles'],['cubic','Cubic'],['gyroid','Gyroid'],['honeycomb','Honeycomb'],['concentric','Concentric']],d:'lines',b:1},
+  {k:'tpt',c:'skinPattern',t:'sel',l:'Top and bottom pattern',o:[['monotonic','Monotonic (tidy)'],['lines','Lines (alternating)'],['concentric','Concentric']],d:'monotonic',w:1},
+  {k:'ic',c:'combine',t:'sel',num:1,l:'Combine infill every',o:[['1','1 layer (off)'],['2','2 layers'],['3','3 layers']],d:'1',h:'Thicker, faster infill. Capped so the line never gets taller than the nozzle.'},
+ ]},
+ {g:'Surface quality',f:[
+  {k:'ir',c:'ironing',t:'chk',l:'Ironing (smooth top surfaces)',d:0,b:1,h:'A slow, nearly dry pass over every flat top. Adds time on big tops.'},
+  {k:'fz',c:'fuzzy',t:'chk',l:'Fuzzy skin on outer walls',d:0,b:1},
+  {k:'fzt',c:'fuzzyT',l:'Fuzzy depth mm',d:0.25,lo:0.05,hi:0.8,st:0.05},
+  {k:'fzd',c:'fuzzyD',l:'Fuzzy point spacing mm',d:0.5,lo:0.2,hi:1.5,st:0.1},
+ ]},
+ {g:'Bridges and overhangs',f:[
+  {k:'bg',c:'bridges',t:'chk',l:'Detect bridges (thick, slow, cooled)',d:1,b:1,h:'Covers spans over air and the first solid layer over sparse infill.'},
+  {k:'bv',c:'vBridge',l:'Bridge mm/s',d:30,lo:10,hi:100,st:5,int:1},
+  {k:'bf',c:'bridgeFlow',l:'Bridge flow %',d:100,lo:60,hi:130,st:5,int:1},
+  {k:'bfn',c:'bridgeFan',l:'Bridge fan %',d:100,lo:0,hi:100,st:5,int:1},
+  {k:'os',c:'ovSlow',t:'chk',l:'Slow and cool on overhanging walls',d:1,b:1},
+  {k:'ov',c:'vOverhang',l:'Overhang mm/s',d:20,lo:5,hi:80,st:5,int:1},
+ ]},
+ {g:'Cooling',f:[
+  {k:'fn',c:'fan',l:'Fan %',d:100,lo:0,hi:100,st:5,int:1,b:1},
+  {k:'fl',c:'fanLayer',l:'Fan starts at layer',d:2,lo:0,hi:20,st:1,int:1},
+  {k:'mlt',c:'minLayerTime',l:'Min layer time s',d:6,lo:0,hi:60,st:1,int:1},
+  {k:'mnv',c:'minSpeed',l:'Slowest mm/s',d:10,lo:3,hi:60,st:1,int:1},
+ ]},
+ {g:'Speeds',f:[
+  {k:'vo',c:'vOuter',l:'Outer wall mm/s',d:35,lo:5,hi:200,st:5,int:1},
+  {k:'vi',c:'vInner',l:'Inner wall mm/s',d:55,lo:5,hi:300,st:5,int:1},
+  {k:'vf',c:'vInfill',l:'Infill mm/s',d:70,lo:5,hi:300,st:5,int:1},
+  {k:'vt',c:'vTravel',l:'Travel mm/s',d:120,lo:20,hi:500,st:10,int:1},
+  {k:'v1',c:'vFirst',l:'First layer mm/s',d:20,lo:5,hi:100,st:5,int:1},
+  {k:'mv',c:'maxVol',l:'Max flow mm³/s',d:12,lo:2,hi:40,st:1,int:1,h:'Speeds are capped so the hotend never has to melt more than this.'},
+ ]},
+ {g:'Retraction and travel',f:[
+  {k:'rt',c:'retract',l:'Retraction mm',d:0.8,lo:0,hi:6,st:0.1},
+  {k:'rs',c:'retractSpeed',l:'Retract mm/s',d:35,lo:5,hi:100,st:5,int:1},
+  {k:'rm',c:'retractMin',l:'Retract if travel over mm',d:1.5,lo:0,hi:20,st:0.5},
+  {k:'zh',c:'zhop',l:'Z hop mm',d:0,lo:0,hi:2,st:0.1},
+  {k:'rn',c:'noRetractInside',t:'chk',l:'Skip retraction on travels inside the part',d:1},
+  {k:'wp',c:'wipe',t:'chk',l:'Wipe along the last line while retracting',d:0},
+ ]},
+ {g:'Temperature and filament',open:true,f:[
+  {k:'nz',c:'nozzle',l:'Nozzle °C',d:205,lo:150,hi:300,st:5,int:1,b:1},
+  {k:'bd',c:'bed',l:'Bed °C',d:60,lo:0,hi:120,st:5,int:1,b:1},
+  {k:'nzf',c:'nozzleFirst',l:'First layer nozzle °C (blank = same)',d:'',lo:150,hi:300,st:5,int:1,opt:1},
+  {k:'bdf',c:'bedFirst',l:'First layer bed °C (blank = same)',d:'',lo:0,hi:120,st:5,int:1,opt:1},
+  {k:'fd',c:'filD',l:'Filament diameter',d:1.75,lo:1.5,hi:3,st:0.01},
+  {k:'ex',c:'flow',l:'Extrusion multiplier',d:1,lo:0.7,hi:1.3,st:0.01},
+  {k:'den',c:'density',l:'Density g/cm³',d:1.24,lo:0.8,hi:2.5,st:0.01},
+  {k:'fcs',c:'cost',l:'Price per kg',d:20,lo:0,hi:500,st:1,int:1},
+ ]},
+ {g:'Machine (Klipper)',f:[
+  {k:'nd',c:'nozzleD',l:'Nozzle diameter',d:0.4,lo:0.2,hi:1.2,st:0.05},
+  {k:'pa',c:'pressureAdv',l:'Pressure advance (0 = leave)',d:0,lo:0,hi:2,st:0.005},
+  {k:'ac',c:'accel',l:'Acceleration (0 = leave)',d:0,lo:0,hi:20000,st:100,int:1},
+  {k:'aco',c:'accOuter',l:'Outer wall accel',d:0,lo:0,hi:20000,st:100,int:1},
+  {k:'aci',c:'accInfill',l:'Infill accel',d:0,lo:0,hi:20000,st:100,int:1},
+  {k:'scv',c:'scv',l:'Square corner vel (0 = leave)',d:0,lo:0,hi:20,st:1,int:1},
+  {k:'kl',c:'klipperInfo',t:'chk',l:'Report layers to Klipper (SET_PRINT_STATS_INFO)',d:1},
+ ]},
+ {g:'Supports and adhesion',open:true,f:[
+  {k:'su',c:'support',t:'sel',l:'Supports',o:[['off','Off'],['plate','Touching bed only'],['all','Everywhere']],d:'off',b:1,w:1},
+  {k:'sd',c:'supDensity',l:'Support density %',d:15,lo:5,hi:50,st:5,int:1},
+  {k:'sa',c:'overhangDeg',l:'Overhang angle °',d:45,lo:20,hi:80,st:5,int:1},
+  {k:'br',c:'brim',l:'Brim mm (0 = skirt)',d:0,lo:0,hi:20,st:1,int:1,b:1},
+  {k:'skl',c:'skirtLoops',l:'Skirt loops',d:2,lo:1,hi:10,st:1,int:1},
+  {k:'skg',c:'skirtGap',l:'Skirt gap mm',d:4,lo:1,hi:20,st:1,int:1},
+  {k:'rf',c:'raft',l:'Raft layers (0 = none)',d:0,lo:0,hi:6,st:1,int:1,b:1},
+  {k:'rg',c:'raftGap',l:'Raft gap mm',d:0.12,lo:0,hi:0.4,st:0.02},
+ ]},
+ {g:'Special',open:true,f:[
+  {k:'vs',c:'vase',t:'chk',l:'Spiral vase mode',d:0,b:1,h:'One continuous wall that spirals up, with a solid base (the Bottom layers setting) and an open top. Walls, infill and top layers are ignored, and only the largest outline is printed. A wider line width (0.6 to 0.8) makes a sturdier wall.'},
+  {k:'cc',c:'ccLayers',t:'txt',l:'Colour change or pause at layers (e.g. 24, 60)',d:'',b:1,w:1},
+  {k:'ccm',c:'ccCmd',t:'txt',l:'Command used',d:'M600'},
+ ]},
+];
+const SL_DEF={};
+SLF.forEach(G=>G.f.forEach(F=>{ SL_DEF[F.c]=F.t==='chk'?!!F.d:(F.num?parseFloat(F.d):(F.opt?null:F.d)); }));
+Object.assign(SL_DEF,{vSolid:50,vIron:15,vTravelZ:10,firstFlow:1,bedX:220,bedY:220,startGcode:'',endGcode:'',support:'off',vase:false});
 const slcPt=(x,y)=>({X:Math.round(x*SLC_S),Y:Math.round(y*SLC_S)});
 function slcOffset(paths,d){
   if(!paths.length) return [];
@@ -2650,13 +2730,14 @@ function slcClipLines(lines,region){
   const tree=new ClipperLib.PolyTree(); c.Execute(ClipperLib.ClipType.ctIntersection,tree,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
   return ClipperLib.Clipper.OpenPathsFromPolyTree(tree);
 }
-/* parallel lines at an angle, clipped to a region. Lines sit on a fixed grid so layers stack neatly. */
-function slcFill(region,spacing,angle,minLen){
+/* parallel lines at an angle, clipped to a region. Lines sit on a fixed grid so layers stack neatly.
+   off shifts the grid sideways (mm), which is how cubic infill drifts with height. */
+function slcFill(region,spacing,angle,minLen,off){
   if(!region.length||!(spacing>0)) return [];
-  const a=angle*Math.PI/180, c=Math.cos(a), s=Math.sin(a), sp=spacing*SLC_S;
+  const a=angle*Math.PI/180, c=Math.cos(a), s=Math.sin(a), sp=spacing*SLC_S, o=Math.round((off||0)*SLC_S);
   let x0=1e18,x1=-1e18,y0=1e18,y1=-1e18;
   const rot=region.map(p=>p.map(q=>{ const X=Math.round(q.X*c+q.Y*s), Y=Math.round(-q.X*s+q.Y*c); if(X<x0)x0=X; if(X>x1)x1=X; if(Y<y0)y0=Y; if(Y>y1)y1=Y; return {X,Y}; }));
-  const lines=[]; for(let y=Math.ceil(y0/sp)*sp;y<=y1;y+=sp) lines.push([{X:x0-100,Y:Math.round(y)},{X:x1+100,Y:Math.round(y)}]);
+  const lines=[]; for(let y=Math.ceil((y0-o)/sp)*sp+o;y<=y1;y+=sp) lines.push([{X:x0-100,Y:Math.round(y)},{X:x1+100,Y:Math.round(y)}]);
   const out=[];
   slcClipLines(lines,rot).forEach(p=>{
     if(p.length<2) return;
@@ -2665,16 +2746,16 @@ function slcFill(region,spacing,angle,minLen){
   });
   return out;
 }
-/* greedy nearest-endpoint ordering of open segments; returns polylines and the last point */
+/* greedy nearest-endpoint ordering of open polylines (two-point lines are just short polylines); returns paths and the last point */
 function slcOrderLines(segs,from){
   const left=segs.slice(), out=[]; let cur=from;
   while(left.length){
     let bi=0,bd=1e18,flip=false;
     for(let i=0;i<left.length;i++){
-      const s=left[i], d0=(s[0][0]-cur[0])**2+(s[0][1]-cur[1])**2, d1=(s[1][0]-cur[0])**2+(s[1][1]-cur[1])**2;
+      const s=left[i], a=s[0], b=s[s.length-1], d0=(a[0]-cur[0])**2+(a[1]-cur[1])**2, d1=(b[0]-cur[0])**2+(b[1]-cur[1])**2;
       if(d0<bd){bd=d0;bi=i;flip=false;} if(d1<bd){bd=d1;bi=i;flip=true;}
     }
-    const s=left.splice(bi,1)[0]; const pts=flip?[s[1],s[0]]:[s[0],s[1]]; out.push(pts); cur=pts[1];
+    const s=left.splice(bi,1)[0]; const pts=flip?s.slice().reverse():s; out.push(pts); cur=pts[pts.length-1];
   }
   return {paths:out,end:cur};
 }
@@ -2688,6 +2769,166 @@ function slcOrderRings(rings,from){
   return {paths:out,end:cur};
 }
 const slcRing=p=>p.map(q=>[q.X/SLC_S,q.Y/SLC_S]);
+/* ---------- v27 helpers: seams, patterns, bridges, gap fill ---------- */
+function slcRand(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)>>>0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+const slcPathLen=p=>{ let t=0; for(let k=1;k<p.length;k++) t+=Math.hypot(p[k][0]-p[k-1][0],p[k][1]-p[k-1][1]); return t; };
+const slcArea2=r=>{ let a=0; for(let k=0;k<r.length;k++){ const q=r[k], s=r[(k+1)%r.length]; a+=q[0]*s[1]-s[0]*q[1]; } return a/2; };
+const slcToInt=p=>p.map(q=>({X:Math.round(q[0]*SLC_S),Y:Math.round(q[1]*SLC_S)}));
+function slcBBox(region){ let x0=1e18,y0=1e18,x1=-1e18,y1=-1e18; region.forEach(p=>p.forEach(q=>{ if(q.X<x0)x0=q.X; if(q.X>x1)x1=q.X; if(q.Y<y0)y0=q.Y; if(q.Y>y1)y1=q.Y; })); return [x0/SLC_S,y0/SLC_S,x1/SLC_S,y1/SLC_S]; }
+/* open polylines (mm) clipped to a region; gives polylines in mm */
+function slcClipPolys(polys,region){
+  if(!polys.length||!region.length) return [];
+  const c=new ClipperLib.Clipper(); c.AddPaths(polys.map(slcToInt),ClipperLib.PolyType.ptSubject,false); c.AddPaths(region,ClipperLib.PolyType.ptClip,true);
+  const tree=new ClipperLib.PolyTree(); c.Execute(ClipperLib.ClipType.ctIntersection,tree,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
+  return ClipperLib.Clipper.OpenPathsFromPolyTree(tree).map(slcRing);
+}
+function slcSimplify(p,tol){
+  if(p.length<3) return p; const keep=new Uint8Array(p.length); keep[0]=keep[p.length-1]=1; const st=[[0,p.length-1]];
+  while(st.length){ const [a,b]=st.pop(); let md=0,mi=-1; const ax=p[a][0],ay=p[a][1],dx=p[b][0]-ax,dy=p[b][1]-ay,l2=dx*dx+dy*dy,l=Math.sqrt(l2);
+    for(let i=a+1;i<b;i++){ const d=l<1e-9?Math.hypot(p[i][0]-ax,p[i][1]-ay):Math.abs((p[i][0]-ax)*dy-(p[i][1]-ay)*dx)/l; if(d>md){ md=d; mi=i; } }
+    if(md>tol&&mi>0){ keep[mi]=1; st.push([a,mi],[mi,b]); } }
+  return p.filter((_,i)=>keep[i]);
+}
+/* gyroid: marching squares over sin x cos y + sin y cos z + sin z cos x = 0 at this height, then clipped to the region */
+function slcGyroid(region,period,z,minLen){
+  const bb=slcBBox(region), h=Math.max(0.3,period/9), k=2*Math.PI/period;
+  const gx0=Math.floor(bb[0]/h)-1, gy0=Math.floor(bb[1]/h)-1, nx=Math.ceil((bb[2]-bb[0])/h)+3, ny=Math.ceil((bb[3]-bb[1])/h)+3;
+  if(nx*ny>900000) return [];
+  const W=nx+1, sx=new Float64Array(W), cx=new Float64Array(W), sy=new Float64Array(ny+1), cy=new Float64Array(ny+1);
+  for(let i=0;i<=nx;i++){ const x=(gx0+i)*h*k; sx[i]=Math.sin(x); cx[i]=Math.cos(x); }
+  for(let j=0;j<=ny;j++){ const y=(gy0+j)*h*k; sy[j]=Math.sin(y); cy[j]=Math.cos(y); }
+  const cz=Math.cos(z*k), sz=Math.sin(z*k), F=new Float32Array(W*(ny+1));
+  for(let j=0;j<=ny;j++) for(let i=0;i<=nx;i++) F[j*W+i]=sx[i]*cy[j]+sy[j]*cz+sz*cx[i];
+  const segs=[]; const X=i=>(gx0+i)*h, Y=j=>(gy0+j)*h;
+  for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){
+    const a=F[j*W+i], b=F[j*W+i+1], c=F[(j+1)*W+i+1], d=F[(j+1)*W+i];
+    const idx=(a>0?1:0)|(b>0?2:0)|(c>0?4:0)|(d>0?8:0); if(idx===0||idx===15) continue;
+    const bot=()=>[X(i)+h*a/(a-b),Y(j)], rgt=()=>[X(i+1),Y(j)+h*b/(b-c)], top=()=>[X(i)+h*d/(d-c),Y(j+1)], lef=()=>[X(i),Y(j)+h*a/(a-d)];
+    const add=(p,q)=>segs.push([p,q]);
+    switch(idx){
+      case 1: case 14: add(lef(),bot()); break;
+      case 2: case 13: add(bot(),rgt()); break;
+      case 3: case 12: add(lef(),rgt()); break;
+      case 4: case 11: add(rgt(),top()); break;
+      case 6: case 9: add(bot(),top()); break;
+      case 7: case 8: add(lef(),top()); break;
+      case 5: { const m=(a+b+c+d)/4; if(m>0){ add(bot(),rgt()); add(lef(),top()); } else { add(lef(),bot()); add(rgt(),top()); } break; }
+      case 10: { const m=(a+b+c+d)/4; if(m>0){ add(lef(),bot()); add(rgt(),top()); } else { add(bot(),rgt()); add(lef(),top()); } break; }
+    }
+  }
+  const key=p=>Math.round(p[0]*1e4)+','+Math.round(p[1]*1e4), adj=new Map();
+  segs.forEach((s,ix)=>{ [0,1].forEach(e=>{ const kk=key(s[e]); let l=adj.get(kk); if(!l){ l=[]; adj.set(kk,l); } l.push(ix*2+e); }); });
+  const used=new Uint8Array(segs.length), polys=[];
+  const grow=(pts,atEnd)=>{ for(;;){ const p=atEnd?pts[pts.length-1]:pts[0], l=adj.get(key(p)); if(!l) return; let f=-1; for(const e of l){ if(!used[e>>1]){ f=e; break; } } if(f<0) return; used[f>>1]=1; const o=segs[f>>1][(f&1)^1]; if(atEnd) pts.push(o); else pts.unshift(o); } };
+  for(let ix=0;ix<segs.length;ix++){ if(used[ix]) continue; used[ix]=1; const pts=[segs[ix][0],segs[ix][1]]; grow(pts,true); grow(pts,false); polys.push(slcSimplify(pts,0.05)); }
+  return slcClipPolys(polys,region).filter(p=>p.length>=2&&slcPathLen(p)>=minLen);
+}
+/* honeycomb: zigzag rows joined by short verticals; a is the edge length */
+function slcHoneycomb(region,a,minLen){
+  const bb=slcBBox(region), w=Math.sqrt(3)*a, polys=[], r0=Math.floor(bb[1]/(1.5*a))-1, r1=Math.ceil(bb[3]/(1.5*a))+1, i0=Math.floor(bb[0]/(w/2))-2, i1=Math.ceil(bb[2]/(w/2))+2;
+  for(let r=r0;r<=r1;r++){
+    const y0=r*1.5*a, pts=[];
+    for(let i=i0;i<=i1;i++){ const low=(((i+r)%2)+2)%2===0, x=i*w/2; pts.push([x,low?y0+a/2:y0+a]); if(low) polys.push([[x,y0+a/2],[x,y0-a/2]]); }
+    polys.push(pts);
+  }
+  return slcClipPolys(polys,region).filter(p=>p.length>=2&&slcPathLen(p)>=minLen);
+}
+function slcConcentric(region,sp,maxRings){
+  const out=[]; let cur=slcOffset(region,-sp/2);
+  for(let k=0;k<(maxRings||400)&&cur.length;k++){ cur.forEach(p=>{ if(p.length>=3){ const r=slcRing(p); if(slcPathLen(r)>1.2) out.push(r); } }); cur=slcOffset(cur,-sp); }
+  return out;
+}
+/* sparse infill in the chosen pattern: returns open polylines and closed rings */
+function slcInfill(region,cfg,z,i,dens,we,minLen){
+  if(!region.length||!(dens>0)) return {lines:[],rings:[]};
+  switch(cfg.pattern){
+    case 'grid': { const s=we*2/dens; return {lines:slcFill(region,s,45,minLen).concat(slcFill(region,s,135,minLen)),rings:[]}; }
+    case 'triangles': { const s=we*3/dens; return {lines:slcFill(region,s,0,minLen).concat(slcFill(region,s,60,minLen),slcFill(region,s,120,minLen)),rings:[]}; }
+    case 'cubic': { const s=we*3/dens, o=z%s; return {lines:slcFill(region,s,0,minLen,o).concat(slcFill(region,s,60,minLen,o),slcFill(region,s,120,minLen,o)),rings:[]}; }
+    case 'gyroid': return {lines:slcGyroid(region,Math.max(2,we*SLC_GY/dens),z,minLen),rings:[]};
+    case 'honeycomb': return {lines:slcHoneycomb(region,2*we/(Math.sqrt(3)*dens),minLen),rings:[]};
+    case 'concentric': return {lines:[],rings:slcConcentric(region,we/dens)};
+    default: return {lines:slcFill(region,we/dens,(i%2)?135:45,minLen),rings:[]};
+  }
+}
+let SLC_GY=2.45;   // gyroid: line length per area x period, measured
+/* choose where each ring starts. aligned keeps seams in a vertical line and prefers concave corners */
+function slcPickStart(ring,mode,prev,rnd,cur){
+  const n=ring.length; if(n<3) return 0;
+  if(mode==='random') return Math.floor(rnd()*n);
+  if(mode==='nearest'||!mode){ let b=0,bd=1e18; for(let i=0;i<n;i++){ const d=(ring[i][0]-cur[0])**2+(ring[i][1]-cur[1])**2; if(d<bd){ bd=d; b=i; } } return b; }
+  const rear=idx=>{ let b=idx[0]; for(const i of idx){ if(ring[i][1]>ring[b][1]+1e-6||(Math.abs(ring[i][1]-ring[b][1])<=1e-6&&ring[i][0]<ring[b][0])) b=i; } return b; };
+  const all=[]; for(let i=0;i<n;i++) all.push(i);
+  if(mode==='rear') return rear(all);
+  const o=slcArea2(ring)>=0?1:-1, cand=[];
+  for(let i=0;i<n;i++){ const p=ring[(i+n-1)%n], v=ring[i], q=ring[(i+1)%n], ax=v[0]-p[0], ay=v[1]-p[1], bx=q[0]-v[0], by=q[1]-v[1], cr=ax*by-ay*bx, dt=ax*bx+ay*by;
+    if(cr*o<0&&Math.atan2(Math.abs(cr),dt)>0.35) cand.push(i); }
+  const pool=cand.length?cand:all;
+  if(prev.length){ let b=-1,bd=1e18; for(const i of pool) for(const s of prev){ const d=(ring[i][0]-s[0])**2+(ring[i][1]-s[1])**2; if(d<bd){ bd=d; b=i; } }
+    if(b>=0&&bd<25) return b; }
+  return rear(pool);
+}
+function slcOrderRingsPick(rings,from,pick){
+  const items=rings.map(r=>{ const s=pick(r); const pts=r.slice(s).concat(r.slice(0,s)); pts.push(pts[0].slice()); return pts; }), out=[]; let cur=from;
+  while(items.length){ let bi=0,bd=1e18; for(let i=0;i<items.length;i++){ const d=(items[i][0][0]-cur[0])**2+(items[i][0][1]-cur[1])**2; if(d<bd){ bd=d; bi=i; } }
+    const p=items.splice(bi,1)[0]; out.push(p); cur=p[0]; }
+  return {paths:out,end:cur};
+}
+function slcFuzz(pts,thick,dist,rnd){
+  const out=[]; let carry=0;
+  for(let k=1;k<pts.length;k++){ const a=pts[k-1], b=pts[k], dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy); if(L<1e-9) continue; const nx=dy/L, ny=-dx/L; let t=carry;
+    while(t<L){ const r=(rnd()-0.5)*thick; out.push([a[0]+dx*t/L+nx*r,a[1]+dy*t/L+ny*r]); t+=dist; } carry=t-L; }
+  if(out.length<3) return pts; out.push(out[0].slice()); return out;
+}
+function slcDensify(pts,step){
+  const out=[pts[0]];
+  for(let k=1;k<pts.length;k++){ const a=pts[k-1], b=pts[k], n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/step)); for(let j=1;j<=n;j++) out.push([a[0]+(b[0]-a[0])*j/n,a[1]+(b[1]-a[1])*j/n]); }
+  return out;
+}
+/* per-segment overhang level: 0 supported, 1 half unsupported, 2 hanging in air */
+function slcInPolys(pt,polys){ const q={X:Math.round(pt[0]*SLC_S),Y:Math.round(pt[1]*SLC_S)}; let c=0; for(const p of polys){ if(ClipperLib.Clipper.PointInPolygon(q,p)!==0) c++; } return (c&1)===1; }
+function slcLevels(pts,sup1,sup2){
+  const inside=slcInPolys;
+  const lv=[0];
+  for(let k=1;k<pts.length;k++){ const m=[(pts[k-1][0]+pts[k][0])/2,(pts[k-1][1]+pts[k][1])/2]; lv.push(inside(m,sup1)?0:(inside(m,sup2)?1:2)); }
+  return lv;
+}
+/* sweep parallel lines in one direction, side by side, so a top surface reads as one clean pass */
+function slcMonotonic(lines,angle,from){
+  if(!lines.length) return {paths:[],end:from};
+  const a=angle*Math.PI/180, c=Math.cos(a), s=Math.sin(a), key=p=>[-p[0]*s+p[1]*c,p[0]*c+p[1]*s];
+  const L=lines.map(l=>{ const A=key(l[0]), B=key(l[1]); return B[1]>=A[1]?{q:(A[0]+B[0])/2,x:A[1],p:[l[0],l[1]]}:{q:(A[0]+B[0])/2,x:B[1],p:[l[1],l[0]]}; });
+  L.sort((u,v)=>(Math.abs(u.q-v.q)>0.02?u.q-v.q:u.x-v.x));
+  const d0=Math.hypot(L[0].p[0][0]-from[0],L[0].p[0][1]-from[1]), d1=Math.hypot(L[L.length-1].p[0][0]-from[0],L[L.length-1].p[0][1]-from[1]);
+  if(d1<d0) L.reverse();
+  return {paths:L.map(l=>l.p),end:L[L.length-1].p[1]};
+}
+/* the angle whose lines end on solid material at both ends, then the shortest span */
+function slcBridgeAngle(B,sup){
+  const BX=slcOffset(B,0.6); let best=0,bs=-1e9;
+  for(const ang of [0,45,90,135]){
+    const ls=slcFill(BX,1.5,ang,0.05); if(!ls.length) continue; let anch=0,m=0;
+    ls.forEach(l=>{ if(slcInPolys(l[0],sup)) anch++; if(slcInPolys(l[1],sup)) anch++; m=Math.max(m,Math.hypot(l[1][0]-l[0][0],l[1][1]-l[0][1])); });
+    const sc=anch/(2*ls.length)-0.001*m; if(sc>bs+1e-9){ bs=sc; best=ang; }
+  }
+  return best;
+}
+/* one centre line through a thin sliver: from one tip to the other along one side of the shrunken outline */
+function slcMedialHalf(r){
+  const n=r.length; if(n<3) return r.slice();
+  let cx=0,cy=0; r.forEach(q=>{ cx+=q[0]; cy+=q[1]; }); cx/=n; cy/=n;
+  let t1=0,bd=-1; r.forEach((q,i)=>{ const d=(q[0]-cx)**2+(q[1]-cy)**2; if(d>bd){ bd=d; t1=i; } });
+  let t2=t1; bd=-1; r.forEach((q,i)=>{ const d=(q[0]-r[t1][0])**2+(q[1]-r[t1][1])**2; if(d>bd){ bd=d; t2=i; } });
+  const out=[]; for(let i=t1;;i=(i+1)%n){ out.push(r[i]); if(i===t2) break; } return out;
+}
+/* is the straight travel a->b (mm) entirely inside the region? then it will not leave a visible string */
+function slcSegInside(R,a,b){
+  if(!R.length) return false;
+  const c=new ClipperLib.Clipper(); c.AddPath([{X:Math.round(a[0]*SLC_S),Y:Math.round(a[1]*SLC_S)},{X:Math.round(b[0]*SLC_S),Y:Math.round(b[1]*SLC_S)}],ClipperLib.PolyType.ptSubject,false); c.AddPaths(R,ClipperLib.PolyType.ptClip,true);
+  const tree=new ClipperLib.PolyTree(); c.Execute(ClipperLib.ClipType.ctIntersection,tree,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
+  let tot=0; ClipperLib.Clipper.OpenPathsFromPolyTree(tree).forEach(p=>{ for(let k=1;k<p.length;k++) tot+=Math.hypot(p[k].X-p[k-1].X,p[k].Y-p[k-1].Y); });
+  return tot>=Math.hypot(b[0]-a[0],b[1]-a[1])*SLC_S*0.995;
+}
 /* triangles (flat xyz, mm, bed-centred) -> per-layer outlines as Clipper paths */
 function slcOutlines(tris,cfg){
   let minZ=1e18,maxZ=-1e18; for(let i=2;i<tris.length;i+=3){ const z=tris[i]; if(z<minZ)minZ=z; if(z>maxZ)maxZ=z; }
@@ -2766,12 +3007,36 @@ function slcSupports(layers,cfg){
   }
   return {layers:n,first,area};
 }
-async function slcBuild(layers,cfg,onProg){
-  const vase=!!cfg.vase, nb=Math.max(1,cfg.botLayers), w=cfg.w, we=cfg.w-cfg.layerH*(1-Math.PI/4), W=vase?1:cfg.walls, tick=()=>new Promise(r=>setTimeout(r,0)), N=layers.length;
-  // regions inside the walls
-  const A=layers.map(L=>{ const r=slcOffset(L.outline,-(w/2+(W-1)*we+we/2)); return slcDropTiny(r,0.02); });
-  const dens=Math.max(0,Math.min(1,cfg.infill/100)), allSolid=dens>=0.95;
-  let cur=[0,0];
+/* skirt or brim ring paths printed before the part */
+function slcSkirtPaths(outline,cfg,we,raft){
+  const pre=[], w=cfg.w;
+  if(cfg.brim>0&&!raft){ const nb=Math.max(1,Math.round(cfg.brim/we)); for(let k=nb-1;k>=0;k--) slcOffset(outline,w/2+k*we).forEach(p=>pre.push(slcRing(p))); }
+  else for(let k=cfg.skirtLoops-1;k>=0;k--) slcOffset(slcUnion(outline,[]),cfg.skirtGap+w/2+k*we).forEach(p=>pre.push(slcRing(p)));
+  const o=slcOrderRings(pre,[0,0]); return o.paths.map(p=>({t:(cfg.brim>0&&!raft)?'brim':'skirt',pts:p,closed:true}));
+}
+async function slcBuild(layers,cfgIn,onProg){
+  const cfg=Object.assign({},SL_DEF,cfgIn), vase=!!cfg.vase, nb=Math.max(1,cfg.botLayers), w=cfg.w, we=cfg.w-cfg.layerH*(1-Math.PI/4), W=vase?1:cfg.walls, tick=()=>new Promise(r=>setTimeout(r,0)), N=layers.length, S2=SLC_S*SLC_S;
+  const A=layers.map(L=>slcDropTiny(slcOffset(L.outline,-(w/2+(W-1)*we+we/2)),0.02));
+  const dens=Math.max(0,Math.min(1,cfg.infill/100)), allSolid=dens>=0.95, minLen=Math.max(0.6,w*1.5);
+  let comb=Math.max(1,Math.round(cfg.combine||1)); while(comb>1&&cfg.layerH*comb>(cfg.nozzleD||0.4)*1.05) comb--;
+  // skin regions for every layer first, so bridges and ironing can look at their neighbours
+  const S=new Array(N);
+  for(let i=0;i<N;i++){
+    let solid=[];
+    if(A[i].length){
+      if(allSolid||vase) solid=A[i];
+      else{
+        let up=A[i], dn=A[i];
+        for(let k=1;k<=cfg.topLayers;k++){ up=i+k<N?slcInter(up,A[i+k]):[]; if(!up.length) break; }
+        for(let k=1;k<=cfg.botLayers;k++){ dn=i-k>=0?slcInter(dn,A[i-k]):[]; if(!dn.length) break; }
+        solid=slcDropTiny(slcUnion(slcDiff(A[i],up),slcDiff(A[i],dn)),0.05);
+        if(solid.length) solid=slcInter(slcOffset(solid,w*1.5),A[i]);
+      }
+    }
+    S[i]=solid;
+  }
+  let cur=[0,0], seamPrev=[], seamNext=[]; for(let k=0;k<W;k++){ seamPrev.push([]); seamNext.push([]); }
+  const rnd=slcRand(20260101), zrnd=slcRand(777);
   for(let i=0;i<N;i++){
     const L=layers[i], out=[]; L.paths=out;
     if(vase&&i>=nb){                                   // spiral: one ring per layer, z rising all the way round
@@ -2801,86 +3066,177 @@ async function slcBuild(layers,cfg,onProg){
     }
     // walls: inner rings first, outer last
     const rings=[]; for(let k=0;k<W;k++) rings.push(slcOffset(L.outline,-(w/2+k*we)).filter(p=>p.length>=3));
+    let sup1=null, sup2=null;
+    if(i>0&&cfg.ovSlow&&rings[0].length&&slcDropTiny(slcDiff(rings[0],layers[i-1].outline),0.05).length){ sup1=layers[i-1].outline; sup2=slcOffset(sup1,w/2); }
+    const thinPaths=[];
     for(let k=W-1;k>=0;k--){
-      const o=slcOrderRings(rings[k].map(slcRing),cur); cur=o.end;
-      o.paths.forEach(p=>out.push({t:k===0?'wall-outer':'wall-inner',pts:p,closed:true}));
+      const pick=r=>{ const ix=slcPickStart(r,cfg.seam,seamPrev[k],rnd,cur); seamNext[k].push(r[ix]); return ix; };
+      let rk=rings[k].map(slcRing);
+      if(cfg.gapFill){ const keep=[]; rk.forEach(r=>{ const ar=slcArea2(r), per=slcPathLen(r.concat([r[0]])), m=ar>0?2*ar/Math.max(per,1e-6):1e9;
+          if(m<0.7*w){ const path=slcMedialHalf(r); if(slcPathLen(path)>=0.6) thinPaths.push({path,fm:Math.min(1.6,(m+w)/w),outer:k===0}); } else keep.push(r); }); rk=keep; }
+      const o=slcOrderRingsPick(rk,cur,pick); cur=o.end;
+      o.paths.forEach(p=>{
+        const outer=k===0; let pts=p;
+        if(outer&&cfg.fuzzy&&i>0) pts=slcFuzz(p,cfg.fuzzyT,cfg.fuzzyD,zrnd);
+        const P={t:outer?'wall-outer':'wall-inner',pts,closed:true};
+        if(outer&&sup1){ P.pts=slcDensify(pts,1); P.lv=slcLevels(P.pts,sup1,sup2); }
+        out.push(P);
+      });
     }
-    // top and bottom skins
-    let solid=[];
-    if(A[i].length){
-      if(allSolid||vase) solid=A[i];
-      else{
-        let up=A[i], dn=A[i];
-        for(let k=1;k<=cfg.topLayers;k++){ up=i+k<N?slcInter(up,A[i+k]):[]; if(!up.length) break; }
-        for(let k=1;k<=cfg.botLayers;k++){ dn=i-k>=0?slcInter(dn,A[i-k]):[]; if(!dn.length) break; }
-        const top=slcDiff(A[i],up), bot=slcDiff(A[i],dn);
-        solid=slcDropTiny(slcUnion(top,bot),0.05);
-        if(solid.length) solid=slcInter(slcOffset(solid,w*1.5),A[i]);
+    seamPrev=seamNext; seamNext=[]; for(let k=0;k<W;k++) seamNext.push([]);
+    if(thinPaths.length){ const o=slcOrderLines(thinPaths.map(q=>q.path),cur); cur=o.end; o.paths.forEach(p=>{ const q=thinPaths.find(t=>t.path[0]===p[0]||t.path[0]===p[p.length-1]); out.push({t:q.outer?'wall-outer':'wall-inner',pts:p,closed:false,fm:q.fm}); }); }
+    // thin gaps and thin walls
+    let gapWide=[];
+    if(cfg.gapFill&&!vase){
+      let Cv=[]; for(let k=0;k<W;k++) if(rings[k].length){ const band=slcDiff(slcOffset(rings[k],we/2),slcOffset(rings[k],-we/2)); Cv=Cv.length?slcUnion(Cv,band):band; }
+      let G=slcDiff(Cv.length?slcDiff(L.outline,Cv):L.outline,A[i]);
+      G=slcDropTiny(G,0.01); if(G.length) G=slcOffset(slcOffset(G,-0.06),0.06);
+      const gaps=[];
+      G.forEach(g=>{
+        if(ClipperLib.Clipper.Area(g)<=0) return;
+        const r0=slcRing(g), area=Math.abs(ClipperLib.Clipper.Area(g))/S2, per=slcPathLen(r0.concat([r0[0]])), m=2*area/Math.max(per,1e-6);
+        if(m<0.12) return;
+        if(m>1.25*we){ gapWide.push(g); return; }
+        let sh=slcOffset([g],-m*0.42); if(!sh.length) sh=[g];
+        sh.forEach(pg=>{ const path=slcMedialHalf(slcRing(pg)); if(slcPathLen(path)>=0.8) gaps.push(Object.assign(path,{fm:Math.max(0.4,Math.min(1.1,m/we))})); });
+      });
+      if(gaps.length){ const o=slcOrderLines(gaps,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'gap',pts:p,closed:false,fm:gaps.find(q=>q[0]===p[0]||q[0]===p[p.length-1])?.fm||0.7})); }
+    }
+    // top and bottom skins, with bridges carved out
+    let solid=S[i];
+    if(gapWide.length) solid=slcUnion(solid,gapWide);
+    let bridged=false;
+    if(cfg.bridges&&i>0&&!vase&&!allSolid&&solid.length){
+      let B=slcDiff(S[i],S[i-1].length?slcOffset(S[i-1],0.1):[]);
+      B=slcDropTiny(B,0.5); if(B.length){ B=slcOffset(slcOffset(B,-0.6),0.6); B=slcDropTiny(B,1.0); }
+      if(B.length){
+        const nd=cfg.nozzleD||0.4, area=B.reduce((a,p)=>a+Math.abs(ClipperLib.Clipper.Area(p)),0)/S2;
+        const air=slcDropTiny(slcDiff(B,slcOffset(layers[i-1].outline,-0.2)),0.5), airA=air.reduce((a,p)=>a+Math.abs(ClipperLib.Clipper.Area(p)),0)/S2;
+        const ang=airA>0.5*area?slcBridgeAngle(B,slcOffset(layers[i-1].outline,-0.2)):(((i-1)%2)?135:45)+90;
+        const BR=slcInter(slcOffset(B,w),A[i]), lines=slcFill(BR,nd,ang,minLen);
+        if(lines.length){ const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'bridge',pts:p,closed:false})); solid=slcDiff(solid,B); bridged=true; }
       }
     }
-    const minLen=Math.max(0.6,w*1.5);
     if(solid.length){
-      const lines=slcFill(slcOffset(solid,0.05*w),we,(i%2)?135:45,minLen);
-      const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'solid',pts:p,closed:false}));
+      const ang=(i%2)?135:45, reg=slcOffset(solid,0.05*w);
+      if(cfg.skinPattern==='concentric'){ const o=slcOrderRings(slcConcentric(reg,we),cur); cur=o.end; o.paths.forEach(p=>out.push({t:'solid',pts:p,closed:true})); }
+      else{
+        const lines=slcFill(reg,we,ang,minLen);
+        const o=cfg.skinPattern==='lines'?slcOrderLines(lines,cur):slcMonotonic(lines,ang,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'solid',pts:p,closed:false}));
+      }
     }
-    if(!allSolid&&!vase&&dens>0&&A[i].length){
-      const sparse=solid.length?slcDiff(A[i],solid):A[i];
-      let lines;
-      if(cfg.pattern==='grid') lines=slcFill(sparse,we*2/dens,45,minLen).concat(slcFill(sparse,we*2/dens,135,minLen));
-      else lines=slcFill(sparse,we/dens,(i%2)?135:45,minLen);
-      const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'infill',pts:p,closed:false}));
+    // sparse infill
+    if(!allSolid&&!vase&&dens>0&&A[i].length&&(comb<=1||i%comb===comb-1)){
+      const sparse=slcOffset(solid.length?slcDiff(A[i],solid):A[i],0.12);
+      const R=slcInfill(sparse,cfg,L.z,i,dens,we,minLen), fm=comb>1?comb:1;
+      if(R.lines.length){ const o=slcOrderLines(R.lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'infill',pts:p,closed:false,fm})); }
+      if(R.rings.length){ const o=slcOrderRings(R.rings,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'infill',pts:p,closed:true,fm})); }
     }
-    if(i===0){ // skirt or brim, printed before the part
-      const pre=[];
-      if(cfg.brim>0){ const nb=Math.max(1,Math.round(cfg.brim/we)); for(let k=nb-1;k>=0;k--) slcOffset(L.outline,w/2+k*we).forEach(p=>pre.push(slcRing(p))); }
-      else for(let k=cfg.skirtLoops-1;k>=0;k--) slcOffset(slcUnion(L.outline,[]),cfg.skirtGap+w/2+k*we).forEach(p=>pre.push(slcRing(p)));
-      const o=slcOrderRings(pre,[0,0]); const brimPaths=o.paths.map(p=>({t:cfg.brim>0?'brim':'skirt',pts:p,closed:true}));
-      L.paths=brimPaths.concat(out); cur=L.paths.length?L.paths[L.paths.length-1].pts[0]:cur;
+    // ironing: the topmost flat surface only
+    if(cfg.ironing&&!vase&&A[i].length){
+      let T=slcDiff(A[i],i+1<N?A[i+1]:[]); if(T.length){ T=slcOffset(slcOffset(T,-0.5),0.5); T=slcDropTiny(T,2); }
+      if(T.length){ const lines=slcFill(slcOffset(T,-0.1),0.12,(i%2)?135:45,0.8); const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>out.push({t:'iron',pts:p,closed:false,fm:0.15})); }
+    }
+    if(i===0&&!cfg.raft){ // skirt or brim, printed before the part
+      const sk=slcSkirtPaths(L.outline,cfg,we,false);
+      L.paths=sk.concat(out); cur=L.paths.length?L.paths[L.paths.length-1].pts[0]:cur;
     }
     if(onProg&&(i%4===3||i===N-1)){ onProg((i+1)/N); await tick(); }
   }
 }
+/* raft: a coarse base, then dense interface layers. The model is lifted by raft.top + the gap */
+function slcRaftLayers(layers,cfgIn){
+  const cfg=Object.assign({},SL_DEF,cfgIn), n=Math.round(cfg.raft||0); if(n<1) return null;
+  const w=cfg.w, we=w-cfg.layerH*(1-Math.PI/4);
+  let foot=layers[0].outline.slice(); if(layers[0].sup&&layers[0].sup.all.length) foot=slcUnion(foot,layers[0].sup.all);
+  foot=slcOffset(slcOffset(slcOffset(foot,3),2),-2);
+  const out=[]; let z=0, cur=[0,0];
+  for(let j=0;j<n;j++){
+    const h=j===0?0.3:cfg.layerH; z+=h; const L={z,h,raft:true,outline:foot,paths:[]};
+    const reg=slcOffset(foot,-w/2); let lines;
+    if(j===0) lines=slcFill(reg,w*1.4,0,w*2); else lines=slcFill(reg,we*1.02,j===1?90:((j%2)?45:135),w*2);
+    const rings=slcOffset(foot,-w/2).filter(p=>p.length>=3).map(slcRing);
+    if(j===0){ L.paths=slcSkirtPaths(foot,cfg,we,true); if(L.paths.length) cur=L.paths[L.paths.length-1].pts[0]; }
+    const orr=slcOrderRings(rings,cur); cur=orr.end; orr.paths.forEach(p=>L.paths.push({t:j===0?'raft-base':'raft',pts:p,closed:true,fm:j===0?1.3:1}));
+    const o=slcOrderLines(lines,cur); cur=o.end; o.paths.forEach(p=>L.paths.push({t:j===0?'raft-base':'raft',pts:p,closed:false,fm:j===0?1.3:1}));
+    out.push(L);
+  }
+  return {layers:out,top:z};
+}
 function slcFmt(n,d){ return (+n).toFixed(d).replace(/\.?0+$/,''); }
-function slcGcode(layers,cfg){
-  const ox=cfg.bedX/2, oy=cfg.bedY/2, fil=Math.PI*(cfg.filD/2)**2;
-  const sp={'wall-outer':cfg.vOuter,'wall-inner':cfg.vInner,solid:cfg.vSolid,infill:cfg.vInfill,skirt:cfg.vOuter,brim:cfg.vOuter,support:Math.min(cfg.vInfill,60),'support-if':Math.min(cfg.vSolid,45)};
-  const ePerMm=h=>h*(cfg.w-h*(1-Math.PI/4))/fil*cfg.flow;
-  const sub=s=>s.replace(/\{bed\}/g,cfg.bed).replace(/\{bedFirst\}/g,cfg.bedFirst).replace(/\{nozzle\}/g,cfg.nozzle).replace(/\{nozzleFirst\}/g,cfg.nozzleFirst).replace(/\{bedx\}/g,cfg.bedX).replace(/\{bedy-20\}/g,cfg.bedY-20).replace(/\{bedy-10\}/g,cfg.bedY-10).replace(/\{bedy\}/g,cfg.bedY);
-  const g=[]; let filament=0, supFil=0, time=0, x=0,y=0,z=0,lastF=-1,printLen=0;
-  g.push('; generated by Tinkerbench','; layers '+layers.length+' · layer '+cfg.layerH+' mm · walls '+cfg.walls+' · infill '+cfg.infill+'% '+cfg.pattern,'; line width '+cfg.w+' mm · nozzle '+cfg.nozzle+' C · bed '+cfg.bed+' C','');
-  g.push(sub(cfg.startGcode),'M83 ; relative extrusion','G90','G92 E0','M107');
+function slcGcode(layers,cfgIn){
+  const cfg=Object.assign({},SL_DEF,cfgIn), ox=cfg.bedX/2, oy=cfg.bedY/2, fil=Math.PI*(cfg.filD/2)**2, nzF=cfg.nozzleFirst||cfg.nozzle, bdF=cfg.bedFirst||cfg.bed;
+  const base={'wall-outer':cfg.vOuter,'wall-inner':cfg.vInner,solid:cfg.vSolid,infill:cfg.vInfill,skirt:cfg.vOuter,brim:cfg.vOuter,support:Math.min(cfg.vInfill,60),'support-if':Math.min(cfg.vSolid,45),bridge:cfg.vBridge,gap:Math.min(cfg.vInner,30),iron:cfg.vIron,raft:Math.min(cfg.vInfill,50),'raft-base':Math.min(cfg.vInfill,40)};
+  const sub=s=>s.replace(/\{bed\}/g,cfg.bed).replace(/\{bedFirst\}/g,bdF).replace(/\{nozzle\}/g,cfg.nozzle).replace(/\{nozzleFirst\}/g,nzF).replace(/\{bedx\}/g,cfg.bedX).replace(/\{bedy-20\}/g,cfg.bedY-20).replace(/\{bedy-10\}/g,cfg.bedY-10);
+  const areaMm=(P,h)=>P.t==='bridge'?Math.PI*((cfg.nozzleD||0.4)/2)**2*(cfg.bridgeFlow/100):h*(cfg.w-h*(1-Math.PI/4))*(P.fm||1);
+  const accOf=(t,first)=>{ let a=cfg.accel; if(!first){ if(t==='wall-outer'||t==='iron') a=cfg.accOuter||a; else if(t==='infill'||t==='solid'||t==='support'||t==='support-if'||t==='gap'||t==='raft'||t==='raft-base') a=cfg.accInfill||a; } return a; };
+  const estA=cfg.accel||3000, vc=cfg.scv||5;
+  const cc=new Set(String(cfg.ccLayers||'').split(/[^0-9]+/).filter(Boolean).map(Number));
+  const g=[]; let filament=0, supFil=0, time=0, x=0,y=0,z=0,lastF=-1,printLen=0, fanNow=-1, accNow=-1, retracted=false, hopped=false, lastPts=null;
+  g.push('; generated by Tinkerbench','; layers '+layers.length+' · layer '+cfg.layerH+' mm · walls '+cfg.walls+' · infill '+cfg.infill+'% '+cfg.pattern+' · seam '+cfg.seam,'; line width '+cfg.w+' mm · nozzle '+cfg.nozzle+' C · bed '+cfg.bed+' C','');
+  g.push(sub(cfg.startGcode),'M83 ; relative extrusion','G90','G92 E0','M107'); fanNow=0;
+  if(cfg.pressureAdv>0) g.push('SET_PRESSURE_ADVANCE ADVANCE='+slcFmt(cfg.pressureAdv,4));
+  if(cfg.scv>0) g.push('SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY='+cfg.scv);
   if(cfg.klipperInfo) g.push('SET_PRINT_STATS_INFO TOTAL_LAYER='+layers.length);
   const F=(v)=>{ const f=Math.round(v*60); if(f===lastF) return ''; lastF=f; return ' F'+f; };
-  let retracted=false;
-  const move=(tx,ty,speed)=>{ const d=Math.hypot(tx-x,ty-y); time+=d/speed; x=tx; y=ty; };
+  const setFan=pct=>{ pct=Math.max(0,Math.min(100,Math.round(pct))); if(pct===fanNow) return; fanNow=pct; g.push(pct?'M106 S'+Math.round(pct*2.55):'M107'); };
+  const setAcc=a=>{ if(!(a>0)||a===accNow) return; accNow=a; g.push('SET_VELOCITY_LIMIT ACCEL='+a+' ACCEL_TO_DECEL='+Math.round(a/2)); };
+  const speedOf=(P,L)=>{ let v=base[P.t]||cfg.vInner; if(L.first) v=Math.min(cfg.vFirst,v); const ar=areaMm(P,L.h); if(cfg.maxVol>0&&ar>0) v=Math.min(v,cfg.maxVol/ar); return v; };
+  const move=(tx,ty,speed)=>{ const d=Math.hypot(tx-x,ty-y); time+=d/speed+(d>0.5?speed/estA:0); x=tx; y=ty; };
   layers.forEach((L,i)=>{
+    // a quick estimate of how long this layer takes, to slow down small ones
+    let est=0, pe=null; L.paths.forEach(P=>{ if(P.preview) return; const v=speedOf(P,L); est+=slcPathLen(P.pts)/v+v/estA; if(pe) est+=Math.hypot(P.pts[0][0]-pe[0],P.pts[0][1]-pe[1])/cfg.vTravel; pe=P.pts[P.pts.length-1]; });
+    const slow=(cfg.minLayerTime>0&&est>0&&est<cfg.minLayerTime)?Math.max(0.2,est/cfg.minLayerTime):1;
     g.push(';LAYER:'+i,';Z:'+slcFmt(L.z,3)+' ;HEIGHT:'+slcFmt(L.h,3));
+    if(cc.has(i+1)) g.push('; COLOR_CHANGE at layer '+(i+1),cfg.ccCmd||'M600');
     if(cfg.klipperInfo) g.push('SET_PRINT_STATS_INFO CURRENT_LAYER='+(i+1));
     if(i===1){ g.push('M104 S'+cfg.nozzle,'M140 S'+cfg.bed); }
-    if(i===cfg.fanLayer) g.push('M106 S'+Math.round(cfg.fan*2.55));
+    const fanBase=i>=cfg.fanLayer?cfg.fan:0; if(i===cfg.fanLayer) setFan(fanBase); else if(i<cfg.fanLayer) setFan(0);
     const spiral=!!L.vase;
     if(!spiral){
       if(!retracted&&i>0){ g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed)); retracted=true; }
-      g.push('G1 Z'+slcFmt(L.z+(cfg.zhop||0),3)+F(cfg.vTravelZ)); time+=Math.abs(L.z-z)/cfg.vTravelZ; z=L.z;
+      g.push('G1 Z'+slcFmt(L.z,3)+F(cfg.vTravelZ)); hopped=false; time+=Math.abs(L.z-z)/cfg.vTravelZ; z=L.z;
     }
-    const first=i===0, e=ePerMm(L.h)*(first?cfg.firstFlow:1);
+    const first=!!L.first, inner=cfg.noRetractInside?slcOffset(L.outline,-cfg.w*0.6):null;
     L.paths.forEach(P=>{
       if(P.preview) return;
-      const p0=P.pts[0], tx=p0[0]+ox, ty=p0[1]+oy, dist=Math.hypot(tx-x,ty-y);
-      if(dist>0.001&&spiral&&dist<3&&!retracted){ const ee=dist*e; filament+=ee; printLen+=dist; g.push('G1 X'+slcFmt(tx,3)+' Y'+slcFmt(ty,3)+(P.zs?' Z'+slcFmt(P.zs[0],3):'')+' E'+slcFmt(ee,5)+F(cfg.vOuter)); move(tx,ty,cfg.vOuter); }
+      const p0=P.pts[0], tx=p0[0]+ox, ty=p0[1]+oy, dist=Math.hypot(tx-x,ty-y), vb=speedOf(P,L);
+      if(dist>0.001&&spiral&&dist<3&&!retracted){ const ee=dist*areaMm(P,L.h)*cfg.flow/fil; filament+=ee; printLen+=dist; g.push('G1 X'+slcFmt(tx,3)+' Y'+slcFmt(ty,3)+(P.zs?' Z'+slcFmt(P.zs[0],3):'')+' E'+slcFmt(ee,5)+F(cfg.vOuter)); move(tx,ty,cfg.vOuter); }
       else if(dist>0.001){
-        if(dist>cfg.retractMin&&!retracted&&cfg.retract>0){ g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed)); retracted=true; time+=cfg.retract/cfg.retractSpeed; }
+        let need=cfg.retract>0&&dist>cfg.retractMin&&!retracted;
+        if(need&&inner&&inner.length&&slcSegInside(inner,[x-ox,y-oy],[tx-ox,ty-oy])) need=false;
+        if(need){
+          let rem=cfg.retract;
+          if(cfg.wipe&&lastPts&&lastPts.length>1){          // retract while sliding back along the line just printed
+            let want=1.5, px=x-ox, py=y-oy; const steps=[];
+            for(let k=lastPts.length-2;k>=0&&want>0.05;k--){ const q=lastPts[k], d=Math.hypot(q[0]-px,q[1]-py); if(d<1e-6) continue; const u=Math.min(d,want); steps.push([px+(q[0]-px)*u/d,py+(q[1]-py)*u/d,u]); px=steps[steps.length-1][0]; py=steps[steps.length-1][1]; want-=u; }
+            const tot=steps.reduce((a,s)=>a+s[2],0);
+            if(tot>0.3){ steps.forEach(s=>{ const e=cfg.retract*s[2]/tot; g.push('G1 X'+slcFmt(s[0]+ox,3)+' Y'+slcFmt(s[1]+oy,3)+' E-'+slcFmt(e,4)+F(40)); time+=s[2]/40; rem-=e; x=s[0]+ox; y=s[1]+oy; }); }
+          }
+          if(rem>0.001){ g.push('G1 E-'+slcFmt(rem,4)+F(cfg.retractSpeed)); time+=rem/cfg.retractSpeed; }
+          retracted=true;
+          if(cfg.zhop>0){ g.push('G1 Z'+slcFmt(L.z+cfg.zhop,3)+F(cfg.vTravelZ)); hopped=true; }
+        }
         g.push('G0 X'+slcFmt(tx,3)+' Y'+slcFmt(ty,3)+F(cfg.vTravel)); move(tx,ty,cfg.vTravel);
+        if(hopped){ g.push('G1 Z'+slcFmt(L.z,3)+F(cfg.vTravelZ)); hopped=false; }
       }
-      if(cfg.zhop&&L.paths[0]===P){ g.push('G1 Z'+slcFmt(L.z,3)+F(cfg.vTravelZ)); }
       if(retracted){ g.push('G1 E'+cfg.retract+F(cfg.retractSpeed)); retracted=false; time+=cfg.retract/cfg.retractSpeed; }
       if(spiral&&P.zs&&Math.abs(z-P.zs[0])>1e-6){ z=P.zs[0]; }
-      const v=first?Math.min(cfg.vFirst,sp[P.t]):sp[P.t];
+      setAcc(accOf(P.t,first));
+      if(!P.lv) setFan(P.t==='bridge'?cfg.bridgeFan:fanBase);
+      const e=areaMm(P,L.h)*cfg.flow*(first?cfg.firstFlow:1)/fil, isSup=P.t.slice(0,3)==='sup';
+      time+=vb/estA; let pdx=0,pdy=0;
       for(let k=1;k<P.pts.length;k++){
         const q=P.pts[k], qx=q[0]+ox, qy=q[1]+oy, d=Math.hypot(qx-x,qy-y); if(d<0.001) continue;
-        const ee=d*e; filament+=ee; if(P.t[0]==='s'&&P.t[1]==='u'&&P.t[2]==='p') supFil+=ee; printLen+=d;
-        g.push('G1 X'+slcFmt(qx,3)+' Y'+slcFmt(qy,3)+(P.zs?' Z'+slcFmt(P.zs[k],3):'')+' E'+slcFmt(ee,5)+F(v)); move(qx,qy,v); time+=d/v*0.12;
+        let v=vb; const lv=P.lv?P.lv[k]:0;
+        if(P.lv){ setFan(lv>0?Math.max(fanBase,cfg.ovFan||100):fanBase); if(lv>0) v=Math.min(v,Math.max(5,cfg.vOverhang*(lv>1?0.6:1))); }
+        if(slow<1) v=Math.max(Math.min(v,cfg.minSpeed),v*slow);
+        const ee=d*e; filament+=ee; if(isSup) supFil+=ee; printLen+=d;
+        g.push('G1 X'+slcFmt(qx,3)+' Y'+slcFmt(qy,3)+(P.zs?' Z'+slcFmt(P.zs[k],3):'')+' E'+slcFmt(ee,5)+F(v));
+        const ux=(qx-x)/d, uy=(qy-y)/d; if(k>1&&ux*pdx+uy*pdy<0.7) time+=Math.max(0,v-vc)/estA*0.5; pdx=ux; pdy=uy;
+        time+=d/v; x=qx; y=qy;
       }
+      lastPts=P.pts;
     });
   });
   g.push('G1 E-'+cfg.retract+F(cfg.retractSpeed),'M107',sub(cfg.endGcode));
@@ -2930,7 +3286,8 @@ function slcCheck(layers,cfg,H){
   const supOn=cfg.support&&cfg.support!=='off'&&!cfg.vase;
   if(float!==null) add(supOn?'warn':'bad',supOn?'A piece of the model starts in mid-air at Z '+float.toFixed(1)+' mm. Supports will hold it, but it is not joined to the rest of the model.':'A piece of the model starts in mid-air at Z '+float.toFixed(1)+' mm with nothing under it. It will print as loose strings. Join it to the rest or turn supports on.');
   if(supOn&&firstOver!==null) add('info','Overhangs found from Z '+firstOver.toFixed(1)+' mm. Supports are on (green in the preview), expect rougher surfaces where they touch.');
-  else if(maxW>=5) add('bad','Unsupported spans more than '+maxW+' mm wide (first at Z '+firstOver.toFixed(1)+' mm, red in the preview). Expect sagging or spaghetti. This slicer has no supports yet, so reorient the model or split it.');
+  else if(maxW>=5&&cfg.bridges&&maxW<20) add('warn','Unsupported spans up to about '+maxW+' mm wide (first at Z '+firstOver.toFixed(1)+' mm, red in the preview). Flat gaps between two supported sides print as bridges and are usually fine. Slanted overhangs may sag, so consider supports.');
+  else if(maxW>=5) add('bad','Unsupported spans more than '+maxW+' mm wide (first at Z '+firstOver.toFixed(1)+' mm, red in the preview). Expect sagging or spaghetti. Turn supports on, reorient the model or split it.');
   else if(maxW>=2.5||overArea>150) add('warn','Overhangs steeper than '+(cfg.overhangDeg||45)+'° over '+overLayers+' layers, first at Z '+firstOver.toFixed(1)+' mm (red in the preview). Expect rough undersides, or sagging on the wider parts.');
   // features too thin to print as a proper wall
   if(!cfg.vase){ let thin=0,tot=0; const step=Math.max(1,Math.floor(layers.length/40));
@@ -2940,9 +3297,8 @@ function slcCheck(layers,cfg,H){
   return out;
 }
 /* ---------- slicer panel ---------- */
-const SLK='tinkerbench.slicer';
-const SL_FIELDS=['lh','fh','lw','wl','tp','bt','if','ip','nz','bd','vo','vi','vf','vt','fn','rt','br','su','sd','sa','url'];
-var sl={res:null,gcode:'',busy:false,prev:null,cur:null,counts:null,armed:0};
+const SLK='tinkerbench.slicer', SLP='tinkerbench.slicer.presets';
+var sl={res:null,gcode:'',busy:false,prev:null,cur:null,counts:null,armed:0,all:null,cfg:null};
 const SL_START=`; Sovol SV06 on Klipper. Edit freely. {bed} {nozzle} {bedx} {bedy} {bedy-20} are filled in.
 M140 S{bedFirst}
 M104 S150
@@ -2969,19 +3325,82 @@ M104 S0
 M140 S0
 M107
 M84`;
-function slLoad(){
-  try{ const o=JSON.parse(localStorage.getItem(SLK)||'{}'); SL_FIELDS.forEach(k=>{ if(o[k]!==undefined&&$('sl-'+k)) $('sl-'+k).value=o[k]; }); $('sl-st-g').value=o.sg||SL_START; $('sl-en-g').value=o.eg||SL_END; $('sl-kl').checked=o.kl!==false; $('sl-vs').checked=!!o.vs; }
-  catch(e){ $('sl-st-g').value=SL_START; $('sl-en-g').value=SL_END; }
-  if(!$('sl-st-g').value) $('sl-st-g').value=SL_START; if(!$('sl-en-g').value) $('sl-en-g').value=SL_END;
+const SL_BUILTIN={
+  'PLA standard 0.2':{},
+  'PLA detail 0.12 (miniatures)':{lh:'0.12',wl:3,tp:7,bt:5,vo:25,vi:40,vf:50,mlt:10,bv:25,ov:15,ip:'gyroid',tpt:'monotonic'},
+  'PLA fast 0.28':{lh:'0.28',tp:4,bt:3,if:10,vo:45,vi:70,vf:90,mlt:4},
+  'PETG 0.2':{nz:235,bd:75,fn:40,vo:30,vi:45,vf:55,rt:1,bv:25,bfn:60,ov:15,mlt:8},
+  'TPU 0.2 (slow)':{nz:225,bd:50,fn:60,vo:20,vi:25,vf:30,vt:80,rt:0.5,rs:20,mv:4,bv:20,ov:15,wl:3},
+};
+const slEl=k=>$('sl-'+k);
+function slBuildForm(){
+  const host=$('sl-form'); host.textContent='';
+  SLF.forEach(G=>{
+    const d=document.createElement('details'); d.className='slsec'; d.open=!!G.open;
+    const s=document.createElement('summary'); s.textContent=G.g; d.appendChild(s);
+    const grid=document.createElement('div'); grid.className='slgrid'; d.appendChild(grid);
+    let anyBasic=false;
+    G.f.forEach(F=>{
+      const lab=document.createElement('label'); if(F.b) anyBasic=true; else lab.dataset.adv='1';
+      let ctl;
+      if(F.t==='chk'){
+        lab.className='wide row-check'; const sp=document.createElement('span'); ctl=document.createElement('input'); ctl.type='checkbox'; ctl.checked=!!F.d;
+        sp.appendChild(ctl); sp.appendChild(document.createTextNode(' '+F.l)); lab.appendChild(sp);
+      }else{
+        lab.appendChild(document.createTextNode(F.l));
+        if(F.t==='sel'){ ctl=document.createElement('select'); F.o.forEach(o=>{ const op=document.createElement('option'); if(Array.isArray(o)){ op.value=o[0]; op.textContent=o[1]; } else op.value=op.textContent=o; ctl.appendChild(op); }); ctl.value=F.d; }
+        else if(F.t==='txt'){ ctl=document.createElement('input'); ctl.type='text'; ctl.value=F.d; ctl.autocomplete='off'; ctl.spellcheck=false; }
+        else{ ctl=document.createElement('input'); ctl.type='number'; ctl.value=F.d; ctl.min=F.lo; ctl.max=F.hi; ctl.step=F.st; ctl.inputMode=F.int?'numeric':'decimal'; }
+        lab.appendChild(ctl); if(F.w||F.t==='txt') lab.classList.add('wide');
+      }
+      ctl.id='sl-'+F.k; grid.appendChild(lab);
+      if(F.h){
+        const sm=document.createElement('small'); sm.className='wide'; sm.id='sl-'+F.k+'-h'; sm.textContent=F.h; if(!F.b) sm.dataset.adv='1';
+        if(F.t==='chk'){ sm.hidden=!ctl.checked; ctl.addEventListener('change',()=>{ sm.hidden=!ctl.checked; }); }
+        grid.appendChild(sm);
+      }
+    });
+    if(!anyBasic) d.dataset.adv='1';
+    host.appendChild(d);
+  });
 }
-function slSave(){ try{ const o={sg:$('sl-st-g').value,eg:$('sl-en-g').value,kl:$('sl-kl').checked,vs:$('sl-vs').checked}; SL_FIELDS.forEach(k=>{ o[k]=$('sl-'+k).value; }); localStorage.setItem(SLK,JSON.stringify(o)); }catch(e){} }
+function slSyncHelp(){ SLF.forEach(G=>G.f.forEach(F=>{ if(F.t==='chk'&&F.h){ const sm=$('sl-'+F.k+'-h'); if(sm) sm.hidden=!slEl(F.k).checked; } })); }
+function slValues(forPreset){
+  const o={}; SLF.forEach(G=>G.f.forEach(F=>{ if(forPreset&&F.k==='cc') return; const el=slEl(F.k); o[F.k]=F.t==='chk'?el.checked:el.value; }));
+  o.sg=$('sl-st-g').value; o.eg=$('sl-en-g').value; return o;
+}
+function slApply(o,keepCC){
+  SLF.forEach(G=>G.f.forEach(F=>{ if(keepCC&&F.k==='cc') return; const el=slEl(F.k), v=o[F.k]; if(F.t==='chk') el.checked=v===undefined?!!F.d:!!v; else el.value=v===undefined?F.d:v; }));
+  $('sl-st-g').value=o.sg||SL_START; $('sl-en-g').value=o.eg||SL_END; slSyncHelp();
+}
+function slUserPresets(){ try{ return JSON.parse(localStorage.getItem(SLP)||'{}')||{}; }catch(e){ return {}; } }
+function slFillPresets(sel){
+  const u=slUserPresets(), p=$('sl-pre'); p.textContent='';
+  const add=(n,lbl)=>{ const o=document.createElement('option'); o.value=n; o.textContent=lbl; p.appendChild(o); };
+  const c=document.createElement('option'); c.value=''; c.textContent='Custom (current settings)'; p.appendChild(c);
+  Object.keys(SL_BUILTIN).forEach(n=>add('b:'+n,n)); Object.keys(u).forEach(n=>add('u:'+n,'★ '+n));
+  p.value=[...p.options].some(o=>o.value===sel)?sel:'';
+  $('sl-pre-d').disabled=!/^u:/.test(p.value);
+}
+function slLoad(){
+  slBuildForm();
+  let o={}; try{ o=JSON.parse(localStorage.getItem(SLK)||'{}')||{}; }catch(e){}
+  slApply(o,false); if(o.url!==undefined&&$('sl-url')) $('sl-url').value=o.url;
+  $('sl-adv').checked=!!o.adv; $('sl-form').classList.toggle('simple',!o.adv); slFillPresets(o.pre||'');
+}
+function slSave(){ try{ const o=slValues(false); o.url=$('sl-url').value; o.adv=$('sl-adv').checked; o.pre=$('sl-pre').value; localStorage.setItem(SLK,JSON.stringify(o)); }catch(e){} }
 function slCfg(){
-  const n=(k,d,lo,hi)=>{ const v=parseFloat($('sl-'+k).value); return Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):d; };
-  const nozzle=n('nz',205,150,300), bed=n('bd',60,0,120), lh=n('lh',0.2,0.05,0.4);
-  return {layerH:lh,firstH:n('fh',0.2,0.1,0.4),w:n('lw',0.45,0.3,0.8),walls:Math.round(n('wl',2,1,8)),topLayers:Math.round(n('tp',5,1,20)),botLayers:Math.round(n('bt',4,1,20)),
-    infill:n('if',15,0,100),pattern:$('sl-ip').value,vFirst:20,vOuter:n('vo',35,5,200),vInner:n('vi',55,5,300),vSolid:Math.min(n('vi',55,5,300),50),vInfill:n('vf',70,5,300),vTravel:n('vt',120,20,500),vTravelZ:10,
-    nozzle,nozzleFirst:nozzle,bed,bedFirst:bed,fan:n('fn',100,0,100),fanLayer:2,retract:n('rt',0.8,0,6),retractSpeed:35,retractMin:1.5,zhop:0,filD:1.75,flow:1,firstFlow:1,density:1.24,
-    brim:n('br',0,0,20),skirtLoops:2,skirtGap:4,bedX:st.bed,bedY:st.bed,klipperInfo:$('sl-kl').checked,vase:$('sl-vs').checked,overhangDeg:n('sa',45,20,80),support:$('sl-vs').checked?'off':$('sl-su').value,supDensity:n('sd',15,5,50),supXY:0.4,startGcode:$('sl-st-g').value,endGcode:$('sl-en-g').value};
+  const cfg={};
+  SLF.forEach(G=>G.f.forEach(F=>{
+    const el=slEl(F.k); let v;
+    if(F.t==='chk') v=el.checked; else if(F.t==='sel') v=F.num?parseFloat(el.value):el.value; else if(F.t==='txt') v=el.value.trim();
+    else{ const x=parseFloat(el.value); v=Number.isFinite(x)?Math.min(F.hi,Math.max(F.lo,x)):(F.opt?null:F.d); if(F.int&&v!==null) v=Math.round(v); }
+    cfg[F.c]=v;
+  }));
+  cfg.nozzleFirst=cfg.nozzleFirst||cfg.nozzle; if(cfg.bedFirst===null||cfg.bedFirst===undefined) cfg.bedFirst=cfg.bed;
+  Object.assign(cfg,{vSolid:Math.min(cfg.vInner,50),vIron:15,vTravelZ:10,firstFlow:1,ovFan:100,bedX:st.bed,bedY:st.bed,startGcode:$('sl-st-g').value,endGcode:$('sl-en-g').value});
+  if(cfg.vase) cfg.support='off';
+  return cfg;
 }
 const slTime=s=>{ const m=Math.round(s/60); return m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min'; };
 function slClearPreview(){
@@ -2989,7 +3408,9 @@ function slClearPreview(){
   ['prev','cur'].forEach(k=>{ const o=sl[k]; if(o){ scene.remove(o); o.geometry.dispose(); o.material.dispose(); sl[k]=null; } });
   $('sl-bar').hidden=true; world.visible=true; requestRender();
 }
-const SL_COL={over:[1,0.25,0.25],'wall-outer':[0.31,0.76,0.85],'wall-inner':[0.23,0.56,0.65],solid:[0.88,0.65,0.29],infill:[0.79,0.34,0.24],skirt:[0.6,0.6,0.6],brim:[0.6,0.6,0.6],support:[0.35,0.75,0.4],'support-if':[0.55,0.9,0.5]};
+const SL_COL={over:[1,0.25,0.25],'wall-outer':[0.31,0.76,0.85],'wall-inner':[0.23,0.56,0.65],solid:[0.88,0.65,0.29],infill:[0.79,0.34,0.24],skirt:[0.6,0.6,0.6],brim:[0.6,0.6,0.6],support:[0.35,0.75,0.4],'support-if':[0.55,0.9,0.5],bridge:[0.45,0.55,1],gap:[0.95,0.85,0.35],iron:[1,1,1],raft:[0.7,0.55,0.4],'raft-base':[0.6,0.45,0.32]};
+(function(){ const nm=[['wall-outer','Outer wall'],['wall-inner','Inner wall'],['solid','Skin'],['infill','Infill'],['bridge','Bridge'],['gap','Thin fill'],['iron','Ironing'],['support','Support'],['raft','Raft']];
+  $('sl-leg').innerHTML=nm.map(([k,n])=>'<span><i style="background:rgb('+SL_COL[k].map(v=>Math.round(v*255)).join(',')+')"></i>'+n+'</span>').join(''); })();
 function slPreview(layers){
   slClearPreview();
   let nv=0; layers.forEach(L=>L.paths.forEach(P=>{ nv+=Math.max(0,P.pts.length-1)*2; }));
@@ -3019,26 +3440,29 @@ async function slSlice(){
   let tris=[]; solids.forEach(m=>{ const t=worldTriangles(m); for(let i=0;i<t.length;i++) tris.push(t[i]); });
   const nt=tris.length/9;
   let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9; for(let i=0;i<tris.length;i+=3){ const x=tris[i],y=tris[i+1],z=tris[i+2]; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; if(z<z0)z0=z; if(z>z1)z1=z; }
-  const h=st.bed/2, pad=cfg.brim>0?cfg.brim+1:cfg.skirtGap+cfg.skirtLoops*cfg.w+1;
+  const raftH=cfg.raft>0?0.3+(cfg.raft-1)*cfg.layerH+cfg.raftGap:0, h=st.bed/2, pad=(cfg.raft>0?3:0)+(cfg.brim>0&&!cfg.raft?cfg.brim+1:cfg.skirtGap+cfg.skirtLoops*cfg.w+1);
   if(x0-pad<-h||x1+pad>h||y0-pad<-h||y1+pad>h){ toast('The model plus skirt does not fit on the '+st.bed+' mm bed. Move or shrink it.'); return; }
-  if(z1-z0>250){ toast('Taller than the 250 mm the SV06 can print.'); return; }
+  if(z1-z0+raftH>250){ toast('Taller than the 250 mm the SV06 can print.'); return; }
   sl.busy=true; $('sl-go').disabled=true; $('sl-dl').disabled=true; $('sl-up').disabled=true; $('sl-upp').disabled=true;
   const warn=[]; if(x0-pad<-h+16) warn.push('The model is close to the left edge, where the start G-code prints its prime line (X10). Move it right or edit the start G-code.');
   if(Math.abs(z0)>0.02) warn.push(z0>0?'The model floats '+f1(z0)+' mm above the bed; sliced as if it sits on the bed.':'Part of the model is below the bed; sliced from its lowest point.');
   try{
     await new Promise(r=>setTimeout(r,30));
     const R=slcOutlines(tris,cfg); if(!R||!R.layers.length){ toast('Nothing to slice at this height.'); return; }
+    if(cfg.xyComp!==0||cfg.efoot>0){ R.layers.forEach((L,i)=>{ const d=cfg.xyComp-(i===0?cfg.efoot:(i===1?cfg.efoot/2:0)); if(d!==0) L.outline=slcDropTiny(slcOffset(L.outline,d),0.05); }); while(R.layers.length&&!R.layers[R.layers.length-1].outline.length) R.layers.pop(); if(!R.layers.length){ toast('The size compensation removed the whole model.'); return; } }
     const checks=slcCheck(R.layers,cfg); let sup=null;
     if(cfg.support!=='off'){ sup=slcSupports(R.layers,cfg); if(!sup.layers) sup=null; }
     if(cfg.vase&&R.layers.length>cfg.botLayers){ const L=R.layers[Math.min(R.layers.length-1,cfg.botLayers)]; if(L.outline.length>1||L.outline.some(p=>ClipperLib.Clipper.Area(p)<0)) checks.unshift({lvl:'warn',msg:'Vase mode prints only the largest outline. Extra parts and inner holes are ignored.'}); if(R.layers.length<=cfg.botLayers) checks.unshift({lvl:'bad',msg:'The model is shorter than the solid base. Lower the Bottom layers.'}); }
+    const raft=cfg.raft>0?slcRaftLayers(R.layers,cfg):null; if(raft){ const off=raft.top+cfg.raftGap; R.layers.forEach(L=>{ L.z+=off; }); }
     await slcBuild(R.layers,cfg,p=>{ $('sl-go').textContent='Slicing '+Math.round(p*100)+'%'; });
     R.layers.forEach(L=>{ (L.over||[]).forEach(r=>{ if(r.length>2) L.paths.push({t:'over',pts:r.concat([r[0]]),closed:true,preview:true}); }); });
-    const G=slcGcode(R.layers,cfg); sl.gcode=G.text; sl.res=R;
+    const all=raft?raft.layers.concat(R.layers):R.layers; all.forEach(L=>{ L.first=false; }); all[0].first=true;
+    const G=slcGcode(all,cfg); sl.gcode=G.text; sl.res=R; sl.all=all; sl.cfg=cfg;
     if(R.openLoops>0) warn.push(R.openLoops+' open outline'+(R.openLoops>1?'s were':' was')+' skipped. The mesh may not be watertight there.');
     const ico={bad:'✖',warn:'⚠',info:'ℹ'}, ck=checks.length?checks.map(c=>'<div class="ck ck-'+c.lvl+'"><span>'+ico[c.lvl]+'</span><span>'+escHtml(c.msg)+'</span></div>').join(''):'<div class="ck ck-ok"><span>✔</span><span>Print check: nothing risky found.</span></div>';
-    $('sl-sum').innerHTML='<b>'+R.layers.length+' layers</b>'+(cfg.vase?' · vase':'')+' · '+slTime(G.seconds)+' · '+(G.filamentMm/1000).toFixed(2)+' m ('+G.grams.toFixed(1)+' g PLA'+(sup?', '+G.supportGrams.toFixed(1)+' g of it supports':'')+')'+(nt>300000?'<br>Large mesh, slicing was slow.':'')+(warn.length?'<br>'+warn.join('<br>'):'')+ck;
+    $('sl-sum').innerHTML='<b>'+all.length+' layers</b>'+(cfg.vase?' · vase':'')+' · '+slTime(G.seconds)+' · '+(G.filamentMm/1000).toFixed(2)+' m ('+G.grams.toFixed(1)+' g'+(cfg.cost>0?', €'+(G.grams/1000*cfg.cost).toFixed(2):'')+(sup?', '+G.supportGrams.toFixed(1)+' g of it supports':'')+')'+(nt>300000?'<br>Large mesh, slicing was slow.':'')+(warn.length?'<br>'+warn.join('<br>'):'')+ck;
     $('sl-dl').disabled=false; $('sl-up').disabled=false; $('sl-upp').disabled=false;
-    $('sl-sum2').innerHTML=$('sl-sum').innerHTML; tc.detach(); slPreview(R.layers); fitView();
+    $('sl-sum2').innerHTML=$('sl-sum').innerHTML; tc.detach(); slPreview(all); fitView();
     if(!$('sl-panel').hidden) togglePanel('sl-panel');
   }catch(err){ console.error(err); toast('Slicing failed. Try a simpler model or a thicker layer height.'); }
   finally{ sl.busy=false; $('sl-go').disabled=false; $('sl-go').textContent='Slice'; }
@@ -3071,8 +3495,30 @@ $('sl-ly').addEventListener('input',slLayer);
 $('sl-clear').addEventListener('click',slClearPreview);
 $('sl-showm').addEventListener('click',()=>{ world.visible=!world.visible; requestRender(); });
 $('sl-panel').addEventListener('change',slSave);
-$('sl-vs').addEventListener('change',()=>{ $('sl-vs-h').hidden=!$('sl-vs').checked; });
-$('sl-vs-h').hidden=!$('sl-vs').checked;
+$('sl-adv').addEventListener('change',()=>{ $('sl-form').classList.toggle('simple',!$('sl-adv').checked); });
+$('sl-pre').addEventListener('change',()=>{
+  const v=$('sl-pre').value; $('sl-pre-d').disabled=!/^u:/.test(v);
+  if(!v) return;
+  const o=v[0]==='b'?SL_BUILTIN[v.slice(2)]:slUserPresets()[v.slice(2)]; if(!o) return;
+  slApply(o,true); $('sl-pre-n').value=v[0]==='u'?v.slice(2):''; toast('Preset loaded: '+v.slice(2));
+});
+$('sl-pre-s').addEventListener('click',()=>{
+  const n=$('sl-pre-n').value.trim().slice(0,40); if(!n){ toast('Type a name for the preset first.'); return; }
+  try{ const u=slUserPresets(); u[n]=slValues(true); localStorage.setItem(SLP,JSON.stringify(u)); }catch(e){ toast('Could not save the preset in this browser.'); return; }
+  slFillPresets('u:'+n); slSave(); toast('Preset saved: '+n);
+});
+$('sl-pre-d').addEventListener('click',()=>{
+  const v=$('sl-pre').value; if(!/^u:/.test(v)) return;
+  try{ const u=slUserPresets(); delete u[v.slice(2)]; localStorage.setItem(SLP,JSON.stringify(u)); }catch(e){}
+  slFillPresets(''); slSave(); toast('Preset deleted.');
+});
+$('sl-ccb').addEventListener('click',()=>{
+  if(!sl.all||!sl.gcode) return;
+  const n=Math.max(1,Math.min(sl.layers.length,+$('sl-ly').value)), set=new Set(String($('sl-cc').value).split(/[^0-9]+/).filter(Boolean).map(Number));
+  const had=set.has(n); if(had) set.delete(n); else set.add(n);
+  $('sl-cc').value=[...set].sort((a,b)=>a-b).join(', '); slSave();
+  try{ sl.cfg.ccLayers=$('sl-cc').value; sl.gcode=slcGcode(sl.all,sl.cfg).text; toast((had?'Removed the colour change at layer ':'Colour change added at layer ')+n+'. The G-code is updated.'); }catch(e){ toast('Could not update the G-code. Slice again.'); }
+});
 slLoad();
 
 /* ---------- plates, new project, percentage scaling ---------- */
