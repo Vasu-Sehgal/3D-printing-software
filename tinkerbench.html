@@ -317,6 +317,13 @@ hr{border:0; border-top:1px solid var(--line); margin:0; width:100%}
       <small>Works on flat-sided shapes: text, lines, boxes, cylinders, hex prisms. Floor 0 leaves the bottom open. The top is always open.</small>
       <span class="row"><button type="button" class="btn sm primary" id="hol-go">Hollow it</button><button type="button" class="btn sm" id="hol-close">Close</button></span>
     </div>
+    <div class="tool" id="smp-panel" hidden>
+      <b>Simplify (fewer triangles)</b>
+      <small id="smp-info">Select a shape to see its triangle count.</small>
+      <label>Keep <select id="smp-r"><option value="0.75">75%</option><option value="0.5" selected>50%</option><option value="0.25">25%</option><option value="0.1">10%</option><option value="0.05">5%</option></select></label>
+      <small>Removes the triangles that matter least. Curved surfaces stay smooth and sharp edges stay sharp. Big imported meshes get much faster to edit and slice. Undo brings the original back.</small>
+      <span class="row"><button type="button" class="btn sm primary" id="smp-go">Simplify</button><button type="button" class="btn sm" id="smp-close">Close</button></span>
+    </div>
     <div class="tool" id="rnd-panel" hidden>
       <b>Round or chamfer edges</b>
       <label>Size <input type="number" id="rnd-r" value="1.5" min="0.2" max="30" step="0.2" inputmode="decimal"></label>
@@ -571,6 +578,7 @@ const ICON = {
   list:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
   folder:'<path d="M3 6h6l2 2h10v11H3z"/>',
   ungroup:'<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M14 5h6M17 2v6"/>',
+  simplify:'<path d="M12 3l9 16H3z"/><path d="M12 3v16M7.5 11h9"/>',
   hollow:'<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>',
   slice:'<path d="M4 18h16M6 14h12M8 10h8M10 6h4"/>',
   newdoc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14h6"/>',
@@ -729,25 +737,67 @@ function fixWinding(g){
 /* centre a geometry on its bounding box; return it with its native size (mm) and the offset removed */
 /* Shading only: vertex normals averaged across neighbouring faces that bend less than `deg`, so curved
    surfaces look smooth while real edges stay sharp. The printed geometry is untouched. */
+/* Vertex weld for triangle soup: corners within 0.0001 mm share an id. Open-addressing hash in typed arrays, so it stays fast on meshes with hundreds of thousands of triangles.
+   Returns {ids: unique id of each corner, n: number of unique vertices, first: index of the first corner that used each id} */
+function weldSoup(pos){
+  const nv=(pos.length/3)|0, ids=new Int32Array(nv), first=new Int32Array(nv);
+  let cap=16; while(cap<nv*2) cap<<=1;
+  const tab=new Int32Array(cap).fill(-1), qx=new Int32Array(nv), qy=new Int32Array(nv), qz=new Int32Array(nv), mask=cap-1;
+  let n=0;
+  for(let i=0;i<nv;i++){
+    const x=Math.round(pos[i*3]*1e4)|0, y=Math.round(pos[i*3+1]*1e4)|0, z=Math.round(pos[i*3+2]*1e4)|0;
+    let h=Math.imul(x,73856093)^Math.imul(y,19349663)^Math.imul(z,83492791); h^=h>>>13; h=Math.imul(h,0x5bd1e995); h^=h>>>15;
+    let j=h&mask, u;
+    while((u=tab[j])>=0){ if(qx[u]===x&&qy[u]===y&&qz[u]===z) break; j=(j+1)&mask; }
+    if(u<0){ u=n++; tab[j]=u; qx[u]=x; qy[u]=y; qz[u]=z; first[u]=i; }
+    ids[i]=u;
+  }
+  return {ids,n,first};
+}
 function smoothNormals(g,deg){
-  const pos=g.attributes.position.array, nt=pos.length/9;
-  if(nt>250000){ g.computeVertexNormals(); return; }
-  const fn=new Float32Array(nt*3), key=new Array(nt*3), map=new Map(), q=1e4;
+  const pos=g.attributes.position.array, nt=(pos.length/9)|0;
+  if(nt>1500000){ g.computeVertexNormals(); return; }
+  const W=weldSoup(pos), ids=W.ids, nu=W.n, fn=new Float32Array(nt*3), fl=new Float32Array(nt), cnt=new Int32Array(nu+1);
   for(let t=0;t<nt;t++){
     const o=t*9, ux=pos[o+3]-pos[o],uy=pos[o+4]-pos[o+1],uz=pos[o+5]-pos[o+2],vx=pos[o+6]-pos[o],vy=pos[o+7]-pos[o+1],vz=pos[o+8]-pos[o+2];
-    fn[t*3]=uy*vz-uz*vy; fn[t*3+1]=uz*vx-ux*vz; fn[t*3+2]=ux*vy-uy*vx;           // area weighted
-    for(let k=0;k<3;k++){ const kk=Math.round(pos[o+k*3]*q)+','+Math.round(pos[o+k*3+1]*q)+','+Math.round(pos[o+k*3+2]*q); key[t*3+k]=kk; let a=map.get(kk); if(!a){ a=[]; map.set(kk,a); } a.push(t); }
+    const x=uy*vz-uz*vy, y=uz*vx-ux*vz, z=ux*vy-uy*vx;                            // area weighted
+    fn[t*3]=x; fn[t*3+1]=y; fn[t*3+2]=z; fl[t]=Math.hypot(x,y,z)||1;
+    cnt[ids[t*3]+1]++; cnt[ids[t*3+1]+1]++; cnt[ids[t*3+2]+1]++;
   }
+  for(let i=0;i<nu;i++) cnt[i+1]+=cnt[i];
+  const fill=cnt.slice(0,nu), lst=new Int32Array(nt*3);
+  for(let t=0;t<nt;t++) for(let k=0;k<3;k++){ const u=ids[t*3+k]; lst[fill[u]++]=t; }
   const cs=Math.cos(deg*Math.PI/180), out=new Float32Array(nt*9);
   for(let t=0;t<nt;t++){
-    const ax=fn[t*3],ay=fn[t*3+1],az=fn[t*3+2], al=Math.hypot(ax,ay,az)||1;
+    const ax=fn[t*3],ay=fn[t*3+1],az=fn[t*3+2], al=fl[t];
     for(let k=0;k<3;k++){
-      let sx=0,sy=0,sz=0; const list=map.get(key[t*3+k]);
-      for(const u of list){ const bx=fn[u*3],by=fn[u*3+1],bz=fn[u*3+2], bl=Math.hypot(bx,by,bz)||1; if((ax*bx+ay*by+az*bz)/(al*bl)>=cs){ sx+=bx; sy+=by; sz+=bz; } }
+      let sx=0,sy=0,sz=0; const u=ids[t*3+k];
+      for(let p=cnt[u],e=cnt[u+1];p<e;p++){ const q=lst[p], bx=fn[q*3],by=fn[q*3+1],bz=fn[q*3+2]; if((ax*bx+ay*by+az*bz)/(al*fl[q])>=cs){ sx+=bx; sy+=by; sz+=bz; } }
       const l=Math.hypot(sx,sy,sz)||1; out[t*9+k*3]=sx/l; out[t*9+k*3+1]=sy/l; out[t*9+k*3+2]=sz/l;
     }
   }
   g.setAttribute('normal',new THREE.BufferAttribute(out,3));
+}
+/* outline of sharp edges (and open edges) for the selection highlight. Cached per geometry, so undo and redo never recompute it. */
+const EDGE_CACHE=new WeakMap();
+function edgesOf(g){
+  let e=EDGE_CACHE.get(g); if(e) return e;
+  const pos=g.attributes.position.array, nt=(pos.length/9)|0, W=weldSoup(pos), ids=W.ids, cosA=Math.cos(25*Math.PI/180);
+  const fn=new Float32Array(nt*3), E=new Map(), out=[];
+  const seg=(c)=>{ const t=(c/3)|0, k=c%3, o=t*9+k*3, o2=t*9+((k+1)%3)*3; out.push(pos[o],pos[o+1],pos[o+2],pos[o2],pos[o2+1],pos[o2+2]); };
+  for(let t=0;t<nt;t++){
+    const o=t*9, ux=pos[o+3]-pos[o],uy=pos[o+4]-pos[o+1],uz=pos[o+5]-pos[o+2],vx=pos[o+6]-pos[o],vy=pos[o+7]-pos[o+1],vz=pos[o+8]-pos[o+2];
+    let x=uy*vz-uz*vy, y=uz*vx-ux*vz, z=ux*vy-uy*vx; const l=Math.hypot(x,y,z)||1; fn[t*3]=x/l; fn[t*3+1]=y/l; fn[t*3+2]=z/l;
+    for(let k=0;k<3;k++){
+      const p=ids[t*3+k], q=ids[t*3+(k+1)%3]; if(p===q) continue;
+      const key=p<q?p*67108864+q:q*67108864+p, v=E.get(key);
+      if(v===undefined) E.set(key,t*3+k);
+      else if(v>=0){ const t0=(v/3)|0; if(fn[t0*3]*fn[t*3]+fn[t0*3+1]*fn[t*3+1]+fn[t0*3+2]*fn[t*3+2]<=cosA) seg(v); E.set(key,-1); }
+    }
+  }
+  E.forEach(v=>{ if(v>=0) seg(v); });                                  // open edges
+  e=new THREE.BufferGeometry(); e.setAttribute('position',new THREE.Float32BufferAttribute(out,3));
+  EDGE_CACHE.set(g,e); return e;
 }
 function prep(g,opt){
   const gen=opt&&opt.gen, flat=!!g.userData.flat;
@@ -949,9 +999,8 @@ function setHL(m,on){
   const u=m.userData;
   m.material.emissive.set(on?css('--accent'):'#000000');
   if(on) m.material.emissive.multiplyScalar(0.22);
-  if(on && !u.outline && triCount(m)<=200000){
-    if(!u.edgeGeo) u.edgeGeo=new THREE.EdgesGeometry(m.geometry,25);
-    const l=new THREE.LineSegments(u.edgeGeo,new THREE.LineBasicMaterial({color:css('--accent')}));
+  if(on && !u.outline && triCount(m)<=400000){
+    const l=new THREE.LineSegments(edgesOf(m.geometry),new THREE.LineBasicMaterial({color:css('--accent')}));
     m.add(l); u.outline=l;
   }else if(!on && u.outline){
     m.remove(u.outline); u.outline.material.dispose(); u.outline=null;
@@ -962,6 +1011,7 @@ function setSelection(ids){
   st.objs.forEach(m=>setHL(m,st.sel.includes(m.userData.id)));
   if(st.sel.length>1 && st.mode==='scale') st.mode='translate';
   syncGizmo(); updateUI(); refreshInspector(true); updateStatus(); requestRender();
+  if(typeof smpInfo==='function'&&!$('smp-panel').hidden) smpInfo();
 }
 function syncGizmo(){
   const ms=selMeshes();
@@ -1169,6 +1219,15 @@ function b64ToF32(b){
   for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i);
   return new Float32Array(u.buffer);
 }
+/* A freeform mesh is encoded to base64 at most once (cached per array) and only when something really needs the text,
+   so autosaving a big model no longer re-encodes it after every edit. */
+const B64C=new WeakMap();
+const posB64=a=>{ let s=B64C.get(a); if(s===undefined){ s=f32ToB64(a); B64C.set(a,s); } return s; };
+function lazyPos(it,arr){
+  Object.defineProperty(it,'_a',{value:arr,configurable:true});
+  Object.defineProperty(it,'pos',{get(){ return posB64(arr); },enumerable:true,configurable:true});
+  return it;
+}
 function recordOf(m){
   m.updateMatrix();
   const it={name:m.userData.name,mat:m.matrix.toArray(),color:m.userData.solid,hole:m.userData.hole};
@@ -1177,12 +1236,21 @@ function recordOf(m){
   if(m.userData.group){ it.group=m.userData.group; it.gmat=m.userData.gmat; }
   if(m.userData.comp) it.comp=m.userData.comp;
   if(m.userData.shape){ it.shape=m.userData.shape; it.params=m.userData.params; }
-  else it.pos=f32ToB64(m.geometry.attributes.position.array);
+  else lazyPos(it,m.geometry.attributes.position.array);
   return it;
 }
-function serialize(){
+/* raw: freeform meshes as binary arrays (for IndexedDB). lean: leave out the duplicate top-level item list. */
+function idbRecord(it){
+  const o={}; for(const k of Object.keys(it)) if(k!=='pos') o[k]=it[k];
+  const a=it._a; if(a) o.pos=(a.byteOffset===0&&a.byteLength===a.buffer.byteLength)?a:a.slice(); else if(it.pos!==undefined) o.pos=it.pos;
+  return o;
+}
+function serialize(raw,lean){
   syncPlate();
-  return {v:4,bed:st.bed,snap:st.snap,rotSnap:st.rotSnap,objSnap:st.objSnap,objPx:st.objPx,items:plates[curPlate].items,cur:curPlate,plates:plates.map(p=>({name:p.name,items:p.items}))};
+  const f=raw?idbRecord:(x=>x), ps=plates.map(p=>({name:p.name,items:p.items.map(f)}));
+  const d={v:4,bed:st.bed,snap:st.snap,rotSnap:st.rotSnap,objSnap:st.objSnap,objPx:st.objPx,cur:curPlate,plates:ps};
+  if(!lean) d.items=ps[curPlate].items;
+  return d;
 }
 /* rebuild a mesh from a saved record (used by open, undo-free paths and ungroup) */
 function meshFromRecord(it,matrix){
@@ -1191,8 +1259,9 @@ function meshFromRecord(it,matrix){
     const def=shapeDef(it.shape); if(!def) return null;
     params=Object.assign(defaultsOf(def),it.params||{});
     pr=prep(def.make(params),{gen:true});
-  }else if(it.pos){
-    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(b64ToF32(it.pos),3)); pr=prep(g);
+  }else if(it.pos||it._a){
+    const src=it._a||it.pos, arr=typeof src==='string'?b64ToF32(src):new Float32Array(src);
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(arr,3)); pr=prep(g);
   }else return null;
   return addMesh({name:it.name,shape:it.shape||null,params,hole:it.hole,geo:pr.geo,base:pr.base,color:it.color,matrix:matrix||it.mat,hidden:it.hidden,locked:it.locked,group:it.group,gmat:it.gmat,comp:it.comp});
 }
@@ -1205,16 +1274,45 @@ function loadData(d){
   if(d.objSnap!=null) st.objSnap=!!d.objSnap; st.objPx=d.objPx!=null?+d.objPx:(st.objSnap?8:0); if(!st.objSnap) st.objPx=0;
   if(d.plates&&d.plates.length){ plates=d.plates.map(p=>({name:p.name||'Plate',items:p.items||[]})); curPlate=Math.max(0,Math.min(d.cur|0,plates.length-1)); }
   else{ plates=[{name:'Plate 1',items:d.items||[]}]; curPlate=0; }
+  plates.forEach(p=>p.items.forEach(it=>{ if(it.pos instanceof Float32Array) lazyPos(it,it.pos); }));   // binary records from IndexedDB
   plates[curPlate].items.forEach(it=>{ meshFromRecord(it); });
   buildBed(); syncSettings(); setSelection([]); renderPlates();
 }
-let pt=0;
-function persist(){
-  clearTimeout(pt);
-  pt=setTimeout(()=>{
-    try{ localStorage.setItem(KEY,JSON.stringify(serialize())); setSaveText('Autosaved in this browser'); }
-    catch(e){ setSaveText('Autosave unavailable here'); }
-  },500);
+/* Autosave. Small projects go to localStorage as before. A project too big for its roughly 5 MB quota
+   (a dense scan, say) is written to IndexedDB as raw binary instead, and localStorage keeps a marker that points there. */
+const LS_MAX=3500000, IDBN='tinkerbench', IDBS='state';
+let pt=0, saveSeq=0, bootHold=false;
+const idbOpen=()=>new Promise((res,rej)=>{
+  if(!window.indexedDB) return rej(new Error('no indexedDB'));
+  const r=indexedDB.open(IDBN,1); r.onupgradeneeded=()=>r.result.createObjectStore(IDBS); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+});
+const idbDo=(mode,fn)=>idbOpen().then(db=>new Promise((res,rej)=>{
+  const tx=db.transaction(IDBS,mode); let out; const rq=fn(tx.objectStore(IDBS)); if(rq) rq.onsuccess=()=>{ out=rq.result; };
+  tx.oncomplete=()=>{ db.close(); res(out); }; tx.onerror=tx.onabort=()=>{ db.close(); rej(tx.error); };
+}));
+const idbPut=v=>idbDo('readwrite',s=>s.put(v,'main')), idbGet=()=>idbDo('readonly',s=>s.get('main')), idbDel=()=>idbDo('readwrite',s=>s.delete('main'));
+const recSize=it=>(it._a?it._a.length*16/3:(typeof it.pos==='string'?it.pos.length:0))+500;
+function persist(){ clearTimeout(pt); pt=setTimeout(saveNow,500); }
+function saveNow(){
+  if(bootHold) return;
+  try{ syncPlate(); }catch(e){}
+  const big=plates.reduce((a,p)=>a+p.items.reduce((b,it)=>b+recSize(it),0),0);
+  if(big<LS_MAX){
+    try{ localStorage.setItem(KEY,JSON.stringify(serialize(false,true))); setSaveText('Autosaved in this browser'); saveSeq++; if(bigSaved){ bigSaved=false; idbDel().catch(()=>{}); } return; }
+    catch(e){}
+  }
+  saveBig();
+}
+let bigSaved=false;
+function saveBig(){
+  const seq=++saveSeq; let d;
+  try{ d=serialize(true,true); }catch(e){ setSaveText('Autosave unavailable here'); return; }
+  setSaveText('Saving a large project…');
+  idbPut(d).then(()=>{
+    if(seq!==saveSeq) return; bigSaved=true;
+    try{ localStorage.setItem(KEY,JSON.stringify({idb:1,t:Date.now()})); }catch(e){ try{ localStorage.removeItem(KEY); }catch(_){} }
+    setSaveText('Autosaved in this browser (large project)');
+  }).catch(()=>{ setSaveText('Too big to autosave here. Use Save to keep a file.'); });
 }
 function setSaveText(t){ $('st-save').textContent=t; }
 
@@ -1457,7 +1555,12 @@ async function importFile(file){
     const m=addMesh({name:file.name.replace(/\.[^.]+$/,'').slice(0,60)||'Imported',shape:null,geo,base,color:DEFAULT_COLOR});
     m.position.set(0,0,base.z/2);
     commit(); setSelection([m.userData.id]); fitView();
-    toast('Imported '+file.name+' ('+Math.round(geo.attributes.position.count/3).toLocaleString()+' triangles)');
+    const nt=Math.round(geo.attributes.position.count/3);
+    if(nt>250000){
+      const o=[0.75,0.5,0.25,0.1,0.05].find(v=>nt*v<=120000)||0.05; $('smp-r').value=String(o);
+      if($('smp-panel').hidden) togglePanel('smp-panel'); smpInfo();
+      toast('Imported '+file.name+' · '+nt.toLocaleString()+' triangles is heavy. Simplify is open, tap it to make editing faster.');
+    }else toast('Imported '+file.name+' ('+nt.toLocaleString()+' triangles)');
   }catch(err){ toast('Could not read '+file.name+'. Use a binary or ASCII STL, or a Tinkerbench .json.'); }
 }
 $('file-in').addEventListener('change',e=>{ const f=e.target.files[0]; e.target.value=''; if(f) importFile(f); });
@@ -1816,6 +1919,7 @@ registerAction({id:'projects',label:'Saved projects',icon:ICON.folder,bar:'file'
 registerAction({id:'save',label:'Save project',icon:ICON.save,bar:'file',run:saveProject});
 registerAction({id:'export',label:'Export STL',icon:ICON.export,text:'STL',bar:'file',primary:true,run:()=>exportSTL()});
 registerAction({id:'slice',label:'Slice for printing',icon:ICON.slice,bar:'file',pressed:()=>!$('sl-panel').hidden,run:()=>togglePanel('sl-panel')});
+registerAction({id:'simplify',label:'Simplify (fewer triangles)',icon:ICON.simplify,bar:'edit',needs:'some',pressed:()=>!$('smp-panel').hidden,run:()=>{ if(togglePanel('smp-panel')) smpInfo(); }});
 registerAction({id:'measure',label:'Measure',icon:ICON.measure,bar:'view',key:'m',pressed:()=>!$('ms-panel').hidden,run:()=>togglePanel('ms-panel')});
 registerAction({id:'section',label:'Section view',icon:ICON.section,bar:'view',pressed:()=>!$('sec-panel').hidden,run:secToggle});
 registerAction({id:'shell',label:'Shell (hollow out)',icon:ICON.shell,bar:'edit',needs:'one',pressed:()=>!$('shl-panel').hidden,run:()=>togglePanel('shl-panel')});
@@ -2212,7 +2316,7 @@ $('tx-close').addEventListener('click',toggleText);
 $('tx-str').addEventListener('keydown',e=>{ if(e.key==='Enter') addText(); });
 
 /* ---------- panels, hollow and round edges (both work on flat-sided shapes) ---------- */
-const PANELS=['sl-panel','txt-panel','hol-panel','rnd-panel','rev-panel','prj-panel','exp-panel','arr-panel','spl-panel','pp-panel','ed-panel','ms-panel','shl-panel'];
+const PANELS=['sl-panel','txt-panel','hol-panel','rnd-panel','rev-panel','prj-panel','exp-panel','arr-panel','spl-panel','pp-panel','ed-panel','ms-panel','shl-panel','smp-panel'];
 function togglePanel(id){
   const show=$(id).hidden;
   if(show && st.pen) setPen(false);
@@ -2305,18 +2409,18 @@ const v3len=a=>Math.hypot(a[0],a[1],a[2]);
 const v3unit=a=>{ const l=v3len(a)||1; return [a[0]/l,a[1]/l,a[2]/l]; };
 const v3add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], v3mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k];
 function meshTopo(tr){
-  const map=new Map(), V=[], T=[], N=[], E=new Map();
-  const id=(x,y,z)=>{ const k=Math.round(x*1e4)+','+Math.round(y*1e4)+','+Math.round(z*1e4); let i=map.get(k); if(i===undefined){ i=V.length; V.push([x,y,z]); map.set(k,i); } return i; };
-  for(let i=0;i+8<tr.length;i+=9){
-    const a=id(tr[i],tr[i+1],tr[i+2]), b=id(tr[i+3],tr[i+4],tr[i+5]), c=id(tr[i+6],tr[i+7],tr[i+8]), t=T.length;
-    T.push([a,b,c]);
+  const nt=(tr.length/9)|0, W=weldSoup(tr), ids=W.ids, V=new Array(W.n), T=new Array(nt), N=new Array(nt), E=new Map();
+  for(let u=0;u<W.n;u++){ const f=W.first[u]*3; V[u]=[tr[f],tr[f+1],tr[f+2]]; }
+  for(let t=0;t<nt;t++){
+    const a=ids[t*3], b=ids[t*3+1], c=ids[t*3+2];
+    T[t]=[a,b,c];
     const n=v3cross(v3sub(V[b],V[a]),v3sub(V[c],V[a])), l=v3len(n);
-    N.push(l>1e-12&&a!==b&&b!==c&&a!==c?[n[0]/l,n[1]/l,n[2]/l]:[0,0,0]);
-    [[a,b],[b,c],[c,a]].forEach(([p,q])=>{ const k=p<q?p+'|'+q:q+'|'+p; (E.get(k)||E.set(k,[]).get(k)).push(t); });
+    N[t]=l>1e-12&&a!==b&&b!==c&&a!==c?[n[0]/l,n[1]/l,n[2]/l]:[0,0,0];
+    for(let e=0;e<3;e++){ const k=ekey(ids[t*3+e],ids[t*3+(e+1)%3]), L=E.get(k); if(L) L.push(t); else E.set(k,[t]); }
   }
   return {V,T,N,E};
 }
-const ekey=(p,q)=>p<q?p+'|'+q:q+'|'+p;
+const ekey=(p,q)=>p<q?p*67108864+q:q*67108864+p;       // edge id from its two vertex ids
 function faceRegion(tp,t0){
   const n0=tp.N[t0]; if(!n0||v3len(n0)<0.5) return null;
   const d0=v3dot(n0,tp.V[tp.T[t0][0]]), seen=new Set([t0]), q=[t0];
@@ -2371,7 +2475,7 @@ function featureEdges(tp,minDeg){
   tp.E.forEach((ts,k)=>{
     if(ts.length!==2) return; const [t1,t2]=ts;
     if(v3dot(tp.N[t1],tp.N[t2])>cosA||v3len(tp.N[t1])<0.5||v3len(tp.N[t2])<0.5) return;
-    const [a,b]=k.split('|').map(Number);
+    const b=k%67108864, a=(k-b)/67108864;
     const third=t=>tp.T[t].find(v=>v!==a&&v!==b);
     const convex=v3dot(tp.N[t1],v3sub(tp.V[third(t2)],tp.V[a]))<-1e-6;
     out.push({a,b,t1,t2,convex,c1:third(t1),c2:third(t2)});
@@ -2968,7 +3072,8 @@ function slcOutlines(tris,cfg){
       }
       if(!closed) open++; else if(pts.length>=3) loops.push(pts);   // a closed 2-point loop is a zero-area fin, harmless
     }
-    L.outline=slcDropTiny(ClipperLib.Clipper.SimplifyPolygons(loops,ClipperLib.PolyFillType.pftNonZero),0.05);
+    // drop vertices closer than 0.02 mm or lying on a straight line within that: invisible on the print, but dense scans slice many times faster
+    L.outline=slcDropTiny(ClipperLib.Clipper.CleanPolygons(ClipperLib.Clipper.SimplifyPolygons(loops,ClipperLib.PolyFillType.pftNonZero),0.02*SLC_S),0.05);
     delete L.segs;
   });
   while(layers.length&&!layers[layers.length-1].outline.length) layers.pop();
@@ -3590,7 +3695,7 @@ function newProject(){
 }
 function saveToLibrary(){
   const name='Project '+stamp(); syncPlate();
-  const lib=loadLib(); lib[name]={t:Date.now(),count:plates.reduce((a,p,i)=>a+(i===curPlate?st.objs.length:p.items.length),0),data:serialize()};
+  const lib=loadLib(); lib[name]={t:Date.now(),count:plates.reduce((a,p,i)=>a+(i===curPlate?st.objs.length:p.items.length),0),data:serialize(false,true)};
   if(saveLib(lib)){ setDirty(false); toast('Saved "'+name+'" in Projects'); return true; } toast('Could not save in this browser'); return false;
 }
 $('nw-save').addEventListener('click',()=>{ saveProject(); doNew(); });
@@ -3616,6 +3721,176 @@ function scaleSelection(f){
   $('sp').addEventListener('change',e=>{ const v=parseExpr(String(e.target.value).replace(/%/g,'')); if(v===null){ e.target.value='100'; return; } go(v); });
   d.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.p)));
 })();
+
+
+/* ---------- simplify ---------- */
+/* ---------- simplify: quadric edge collapse (Garland and Heckbert) on a welded triangle soup ----------
+   simplifyJob(soup, targetTris) -> {run(ms) -> true when finished, frac(), result() -> Float32Array soup, tris()}
+   Boundary edges are pinned with heavy quadrics, collapses that would flip a face or pinch the surface are refused. */
+function simplifyJob(pos,target){
+  const w=weldSoup(pos), nv=w.n, ids=w.ids, nt0=(ids.length/3)|0;
+  const P=new Float64Array(nv*3);
+  for(let u=0;u<nv;u++){ const f=w.first[u]*3; P[u*3]=pos[f]; P[u*3+1]=pos[f+1]; P[u*3+2]=pos[f+2]; }
+  const T=new Int32Array(nt0*3); let nt=0;
+  for(let t=0;t<nt0;t++){ const a=ids[t*3],b=ids[t*3+1],c=ids[t*3+2]; if(a===b||b===c||a===c) continue; T[nt*3]=a; T[nt*3+1]=b; T[nt*3+2]=c; nt++; }
+  const alive=new Uint8Array(nt).fill(1), valive=new Uint8Array(nv).fill(1), ver=new Int32Array(nv), mark=new Int32Array(nv);
+  const VT=new Array(nv); for(let i=0;i<nv;i++) VT[i]=[];
+  for(let t=0;t<nt;t++){ VT[T[t*3]].push(t); VT[T[t*3+1]].push(t); VT[T[t*3+2]].push(t); }
+  const Q=new Float64Array(nv*10), EK=67108864;
+  const addQ=(u,a,b,c,d,k)=>{ const o=u*10; Q[o]+=k*a*a; Q[o+1]+=k*a*b; Q[o+2]+=k*a*c; Q[o+3]+=k*a*d; Q[o+4]+=k*b*b; Q[o+5]+=k*b*c; Q[o+6]+=k*b*d; Q[o+7]+=k*c*c; Q[o+8]+=k*c*d; Q[o+9]+=k*d*d; };
+  const ecount=new Map();
+  for(let t=0;t<nt;t++){
+    const a=T[t*3],b=T[t*3+1],c=T[t*3+2], ax=P[a*3],ay=P[a*3+1],az=P[a*3+2];
+    const ux=P[b*3]-ax,uy=P[b*3+1]-ay,uz=P[b*3+2]-az,vx=P[c*3]-ax,vy=P[c*3+1]-ay,vz=P[c*3+2]-az;
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx; const l=Math.hypot(nx,ny,nz);
+    if(l>1e-14){ const area=l/2; nx/=l; ny/=l; nz/=l; const d=-(nx*ax+ny*ay+nz*az); addQ(a,nx,ny,nz,d,area); addQ(b,nx,ny,nz,d,area); addQ(c,nx,ny,nz,d,area); }
+    for(let e=0;e<3;e++){ const p=T[t*3+e], q=T[t*3+(e+1)%3], k=p<q?p*EK+q:q*EK+p; const o=ecount.get(k); ecount.set(k,o===undefined?t*3+e+1:-1); }
+  }
+  ecount.forEach((v)=>{                                  // edges with a single face: pin the surface edge in place
+    if(v<=0) return; const t=((v-1)/3)|0, e=(v-1)%3, p=T[t*3+e], q=T[t*3+(e+1)%3];
+    const ex=P[q*3]-P[p*3],ey=P[q*3+1]-P[p*3+1],ez=P[q*3+2]-P[p*3+2], el=Math.hypot(ex,ey,ez); if(!(el>0)) return;
+    const a=T[t*3],b=T[t*3+1],c=T[t*3+2];
+    const ux=P[b*3]-P[a*3],uy=P[b*3+1]-P[a*3+1],uz=P[b*3+2]-P[a*3+2],vx=P[c*3]-P[a*3],vy=P[c*3+1]-P[a*3+1],vz=P[c*3+2]-P[a*3+2];
+    let fx=uy*vz-uz*vy, fy=uz*vx-ux*vz, fz=ux*vy-uy*vx; const fl=Math.hypot(fx,fy,fz)||1; fx/=fl; fy/=fl; fz/=fl;
+    let nx=ey*fz-ez*fy, ny=ez*fx-ex*fz, nz=ex*fy-ey*fx; const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
+    const d=-(nx*P[p*3]+ny*P[p*3+1]+nz*P[p*3+2]), k=el*el*10; addQ(p,nx,ny,nz,d,k); addQ(q,nx,ny,nz,d,k);
+  });
+  /* binary min-heap in typed arrays: cost, a, b, version of a, version of b, collapse position */
+  let cap=1<<16, hn=0, hc=new Float64Array(cap), ha=new Int32Array(cap), hb=new Int32Array(cap), hva=new Int32Array(cap), hvb=new Int32Array(cap), hp=new Float64Array(cap*3);
+  const grow=()=>{ cap*=2; const g=(A,n)=>{ const B=new A.constructor(cap*n); B.set(A); return B; }; hc=g(hc,1); ha=g(ha,1); hb=g(hb,1); hva=g(hva,1); hvb=g(hvb,1); hp=g(hp,3); };
+  const swap=(i,j)=>{ let t=hc[i]; hc[i]=hc[j]; hc[j]=t; t=ha[i]; ha[i]=ha[j]; ha[j]=t; t=hb[i]; hb[i]=hb[j]; hb[j]=t; t=hva[i]; hva[i]=hva[j]; hva[j]=t; t=hvb[i]; hvb[i]=hvb[j]; hvb[j]=t;
+    for(let k=0;k<3;k++){ t=hp[i*3+k]; hp[i*3+k]=hp[j*3+k]; hp[j*3+k]=t; } };
+  const up=i=>{ while(i>0){ const p=(i-1)>>1; if(hc[p]<=hc[i]) break; swap(p,i); i=p; } };
+  const down=i=>{ for(;;){ const l=i*2+1, r=l+1; let m=i; if(l<hn&&hc[l]<hc[m]) m=l; if(r<hn&&hc[r]<hc[m]) m=r; if(m===i) break; swap(m,i); i=m; } };
+  const tmp=new Float64Array(10);
+  function pushEdge(a,b){
+    for(let i=0;i<10;i++) tmp[i]=Q[a*10+i]+Q[b*10+i];
+    const ax=P[a*3],ay=P[a*3+1],az=P[a*3+2],bx=P[b*3],by=P[b*3+1],bz=P[b*3+2], mx=(ax+bx)/2,my=(ay+by)/2,mz=(az+bz)/2, el=Math.hypot(bx-ax,by-ay,bz-az);
+    let best=Infinity, bxx=mx, byy=my, bzz=mz;
+    const q=tmp, E=(x,y,z)=>x*x*q[0]+2*x*y*q[1]+2*x*z*q[2]+2*x*q[3]+y*y*q[4]+2*y*z*q[5]+2*y*q[6]+z*z*q[7]+2*z*q[8]+q[9];
+    const c1=(x,y,z)=>{ const e=E(x,y,z); if(e<best){ best=e; bxx=x; byy=y; bzz=z; } };
+    c1(ax,ay,az); c1(bx,by,bz); c1(mx,my,mz);
+    const A=q[0],B=q[1],C=q[2],D=q[4],F=q[5],G=q[7];
+    const det=A*(D*G-F*F)-B*(B*G-F*C)+C*(B*F-D*C);
+    if(Math.abs(det)>1e-12*(Math.abs(A*D*G)+1e-30)){
+      const r0=-q[3],r1=-q[6],r2=-q[8];
+      const x=(r0*(D*G-F*F)-B*(r1*G-F*r2)+C*(r1*F-D*r2))/det, y=(A*(r1*G-F*r2)-r0*(B*G-F*C)+C*(B*r2-r1*C))/det, z=(A*(D*r2-r1*F)-B*(B*r2-r1*C)+r0*(B*F-D*C))/det;
+      if(Math.hypot(x-mx,y-my,z-mz)<=3*el+1e-9) c1(x,y,z);
+    }
+    if(hn>=cap) grow();
+    const i=hn++; hc[i]=Math.max(0,best); ha[i]=a; hb[i]=b; hva[i]=ver[a]; hvb[i]=ver[b]; hp[i*3]=bxx; hp[i*3+1]=byy; hp[i*3+2]=bzz; up(i);
+  }
+  ecount.forEach((v,k)=>{ const b=k%EK, a=(k-b)/EK; pushEdge(a,b); });
+  ecount.clear();
+  let stamp=0, tris=nt;
+  const startTris=nt, goal=Math.max(4,Math.min(target|0,nt));
+  function tryCollapse(a,b,px,py,pz){
+    // 1. link condition: the two ends may share only the vertices opposite the edge
+    stamp++; let la=VT[a], lb=VT[b], k=0;
+    for(let j=0;j<la.length;j++){ const t=la[j]; if(!alive[t]) continue; la[k++]=t; for(let e=0;e<3;e++){ const v=T[t*3+e]; if(v!==a) mark[v]=stamp; } } la.length=k; k=0;
+    let shared=0, common=0; const cs=stamp+1000000000;   // second stamp space for counting common neighbours once
+    for(let j=0;j<lb.length;j++){ const t=lb[j]; if(!alive[t]) continue; lb[k++]=t;
+      const x=T[t*3],y=T[t*3+1],z=T[t*3+2];
+      if(x===a||y===a||z===a){ shared++; }
+      for(let e=0;e<3;e++){ const v=T[t*3+e]; if(v!==b&&v!==a&&mark[v]===stamp){ mark[v]=cs+stamp; common++; } } }
+    lb.length=k;
+    if(shared<1||shared>2||common!==shared) return false;
+    // 2. no face may flip or collapse to a sliver
+    for(let s=0;s<2;s++){
+      const L=s?lb:la, mv=s?b:a;
+      for(let j=0;j<L.length;j++){ const t=L[j]; const x=T[t*3],y=T[t*3+1],z=T[t*3+2];
+        if(x===a&&(y===b||z===b)||x===b&&(y===a||z===a)||(y===a&&z===b)||(y===b&&z===a)) continue;
+        const v0=x===mv?-1:x, v1=y===mv?-1:y, v2=z===mv?-1:z;
+        const X=[v0<0?px:P[x*3],v1<0?px:P[y*3],v2<0?px:P[z*3]], Y=[v0<0?py:P[x*3+1],v1<0?py:P[y*3+1],v2<0?py:P[z*3+1]], Z=[v0<0?pz:P[x*3+2],v1<0?pz:P[y*3+2],v2<0?pz:P[z*3+2]];
+        const ox=[P[x*3],P[y*3],P[z*3]], oy=[P[x*3+1],P[y*3+1],P[z*3+1]], oz=[P[x*3+2],P[y*3+2],P[z*3+2]];
+        const n=(A,B,C)=>{ const ux=A[1]-A[0],uy=B[1]-B[0],uz=C[1]-C[0],vx=A[2]-A[0],vy=B[2]-B[0],vz=C[2]-C[0]; return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx]; };
+        const n0=n(ox,oy,oz), n1=n(X,Y,Z), l0=Math.hypot(n0[0],n0[1],n0[2]), l1=Math.hypot(n1[0],n1[1],n1[2]);
+        if(l1<1e-12||(l0>1e-12&&(n0[0]*n1[0]+n0[1]*n1[1]+n0[2]*n1[2])<0.2*l0*l1)) return false;
+      }
+    }
+    // 3. collapse b into a
+    P[a*3]=px; P[a*3+1]=py; P[a*3+2]=pz;
+    for(let q=0;q<10;q++) Q[a*10+q]+=Q[b*10+q];
+    for(let j=0;j<lb.length;j++){ const t=lb[j];
+      let has=false; for(let e=0;e<3;e++) if(T[t*3+e]===a) has=true;
+      if(has){ alive[t]=0; tris--; }
+      else{ for(let e=0;e<3;e++) if(T[t*3+e]===b) T[t*3+e]=a; la.push(t); }
+    }
+    valive[b]=0; VT[b]=null; ver[a]++;
+    // 4. fresh costs for every edge around the merged vertex
+    stamp+=2; const st2=stamp+2000000000;
+    for(let j=0;j<la.length;j++){ const t=la[j]; if(!alive[t]) continue; for(let e=0;e<3;e++){ const v=T[t*3+e]; if(v!==a&&mark[v]!==st2){ mark[v]=st2; pushEdge(a,v); } } }
+    return true;
+  }
+  let fails=0;
+  return {
+    run(ms){
+      const t0=Date.now(); let n=0;
+      while(hn>0&&tris>goal){
+        const a=ha[0], b=hb[0], ok=valive[a]&&valive[b]&&hva[0]===ver[a]&&hvb[0]===ver[b], px=hp[0], py=hp[1], pz=hp[2];
+        hn--; if(hn>0){ swap(0,hn); down(0); }              // pop first, collapsing pushes new entries
+        if(ok) tryCollapse(a,b,px,py,pz)||fails++;
+        if((++n&255)===0&&Date.now()-t0>ms) return false;
+      }
+      return true;
+    },
+    frac(){ return startTris<=goal?1:Math.min(1,(startTris-tris)/(startTris-goal)); },
+    tris(){ return tris; },
+    result(){
+      const out=new Float32Array(tris*9); let o=0;
+      for(let t=0;t<nt;t++){ if(!alive[t]) continue; for(let e=0;e<3;e++){ const v=T[t*3+e]; out[o++]=P[v*3]; out[o++]=P[v*3+1]; out[o++]=P[v*3+2]; } }
+      return out;
+    }
+  };
+}
+
+let smpBusy=false;
+function smpInfo(){
+  const ms=selMeshes(), el=$('smp-info'); if(smpBusy) return;
+  if(!ms.length){ el.textContent='Select a shape to see its triangle count.'; return; }
+  const tot=ms.reduce((a,m)=>a+triCount(m),0), keep=+$('smp-r').value;
+  el.textContent=(ms.length>1?ms.length+' shapes · ':'')+tot.toLocaleString()+' triangles, about '+Math.max(12,Math.round(tot*keep)).toLocaleString()+' after';
+}
+function simplifySelected(){
+  if(smpBusy) return;
+  const sel=selMeshes(); if(!sel.length){ toast('Select a shape first'); return; }
+  const ms=sel.filter(m=>!m.userData.comp); if(!ms.length){ toast('Components share one shape. Edit the component instead.'); return; }
+  const keep=+$('smp-r').value, jobs=ms.map(m=>({m,g:m.geometry,from:triCount(m),to:Math.max(12,Math.round(triCount(m)*keep)),job:null})).filter(j=>j.from>j.to&&j.from>24);
+  if(!jobs.length){ toast('That shape is already that simple'); return; }
+  smpBusy=true; $('smp-go').disabled=true;
+  let k=0, before=0, after=0, n=0;
+  const finish=()=>{
+    smpBusy=false; $('smp-go').disabled=false;
+    if(n){ commit(); updateStatus(); toast('Simplified · '+before.toLocaleString()+' → '+after.toLocaleString()+' triangles'); }
+    else toast('The shape changed while it was working, so nothing was applied');
+    smpInfo();
+  };
+  const apply=j=>{
+    const m=j.m; if(!st.objs.includes(m)||m.geometry!==j.g) return;
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(j.job.result(),3));
+    smoothNormals(g,30); g.computeBoundingBox(); g.computeBoundingSphere();
+    const base=new THREE.Vector3(); g.boundingBox.getSize(base); base.max(new THREE.Vector3(0.001,0.001,0.001));
+    const wasSel=st.sel.includes(m.userData.id);
+    setHL(m,false); m.geometry=g; m.userData.base=base; m.userData.shape=null; m.userData.params=null; m.userData.group=null; m.userData.gmat=null; m.userData.edgeGeo=null;
+    if(wasSel) setHL(m,true);
+    before+=j.from; after+=triCount(m); n++;
+  };
+  const next=()=>{
+    if(k>=jobs.length){ finish(); return; }
+    const j=jobs[k];
+    try{
+      if(!j.job) j.job=simplifyJob(j.g.attributes.position.array,j.to);
+      const fin=j.job.run(30);
+      $('smp-info').textContent='Simplifying '+(k+1)+' of '+jobs.length+' · '+Math.round(j.job.frac()*100)+'%';
+      if(fin){ apply(j); k++; }
+    }catch(err){ toast('That shape could not be simplified'); k++; }
+    setTimeout(next,0);
+  };
+  setTimeout(next,20);
+}
+$('smp-go').addEventListener('click',simplifySelected);
+$('smp-close').addEventListener('click',()=>togglePanel('smp-panel'));
+$('smp-r').addEventListener('change',smpInfo);
 
 $('hol-go').addEventListener('click',hollowSelected);
 $('hol-close').addEventListener('click',toggleHollow);
@@ -4228,7 +4503,7 @@ function renderProjects(){
 $('prj-save').addEventListener('click',()=>{
   const name=($('prj-name').value||'').trim()||('Project '+stamp());
   if(!st.objs.length){ toast('Nothing to save yet'); return; }
-  const lib=loadLib(); lib[name]={t:Date.now(),count:st.objs.length,data:serialize()};
+  const lib=loadLib(); lib[name]={t:Date.now(),count:st.objs.length,data:serialize(false,true)};
   if(saveLib(lib)){ setDirty(false); toast('Saved "'+name+'"'); renderProjects(); }
 });
 $('prj-list').addEventListener('click',e=>{
@@ -4376,10 +4651,11 @@ new ResizeObserver(resize).observe(vp);
 
 /* ---------- start ---------- */
 (function boot(){
-  let loaded=false;
+  let loaded=false, fromIDB=false;
+  const hasItems=d=>!!d&&((d.plates&&d.plates.some(p=>p.items&&p.items.length))||(d.items&&d.items.length));
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){ const d=JSON.parse(raw); if(d&&d.items&&d.items.length){ loadData(d); loaded=true; } }
+    if(raw){ const d=JSON.parse(raw); if(d&&d.idb) fromIDB=true; else if(hasItems(d)){ loadData(d); loaded=true; } }
   }catch(e){}
   // drop anything with broken (NaN) geometry so one bad shape cannot blank the whole view
   const bad=m=>{ const b=worldBox(m); return ![b.min.x,b.min.y,b.min.z,b.max.x,b.max.y,b.max.z].every(Number.isFinite); };
@@ -4388,7 +4664,7 @@ new ResizeObserver(resize).observe(vp);
     if(gone.length){ try{ persist(); }catch(e){} }
     if(!st.objs.length) loaded=false;
   }
-  if(!loaded){
+  if(!loaded&&!fromIDB){
     syncSettings();
     const plate=addShape('box',{x:0,y:0}); plate.userData.name='Base plate';
     plate.scale.set(60/plate.userData.base.x,40/plate.userData.base.y,5/plate.userData.base.z); plate.position.z=2.5;
@@ -4401,7 +4677,23 @@ new ResizeObserver(resize).observe(vp);
   updateUI(); updateStatus(); refreshInspector(true); fitView();
   if(!loaded) setDirty(false);
   renderPlates();
-  setSaveText(loaded?'Restored your last session':'Starter scene · autosaves in this browser');
+  setSaveText(loaded?'Restored your last session':(fromIDB?'Loading your large project…':'Starter scene · autosaves in this browser'));
+  if(fromIDB){                                    // a project too big for localStorage lives in IndexedDB
+    bootHold=true;
+    idbGet().then(d=>{
+      bootHold=false;
+      if(!hasItems(d)) throw new Error('empty');
+      bigSaved=true; loadData(d); hist=[snapshot()]; hi=0; setDirty(false); updateUI(); updateStatus(); refreshInspector(true); renderPlates(); fitView();
+      setSaveText('Restored your last session');
+    }).catch(()=>{
+      bootHold=false;
+      syncSettings();
+      const plate=addShape('box',{x:0,y:0}); plate.userData.name='Base plate';
+      plate.scale.set(60/plate.userData.base.x,40/plate.userData.base.y,5/plate.userData.base.z); plate.position.z=2.5;
+      plate.userData.solid='#8b9199'; plate.material.color.set('#8b9199');
+      hist=[snapshot()]; hi=0; updateUI(); updateStatus(); fitView(); setSaveText('Could not restore the large project. Starter scene.'); toast('Could not restore the saved large project');
+    });
+  }
 })();
 })();
 </script>
